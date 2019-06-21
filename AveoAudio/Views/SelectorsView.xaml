@@ -1,0 +1,145 @@
+﻿<UserControl
+    x:Class="AveoAudio.Views.SelectorsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignWidth="400">
+
+    <UserControl.Resources>
+        <Style x:Key="OptionText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}" />
+            <Setter Property="Margin" Value="20 0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="ListViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0 0 0 2" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        </Style>
+
+        <Style x:Key="TileStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Height" Value="{StaticResource TileSize}" />
+            <Setter Property="Width" Value="{StaticResource TileSize}" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+        </Style>
+
+        <Style x:Key="CustomizeButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="LightGray" />
+            <Setter Property="BorderThickness" Value="1 0 0 0" />
+            <Setter Property="Content" Value="&#xE713;" />
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="Width" Value="{StaticResource TileSize}" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+        </Style>
+
+        <Style x:Key="Separator" TargetType="Border">
+            <Setter Property="BorderBrush" Value="LightGray" />
+            <Setter Property="BorderThickness" Value="0 1 0 0" />
+            <Setter Property="Margin" Value="10 0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="21" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ListView x:Name="timeOfDaySelector" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.SelectedTimeOfDay, Mode=TwoWay}">
+            <ListViewItem x:Name="morning" Tag="Morning">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=morning, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}" Padding="5">
+                        <Image Source="ms-appx:///Assets/Morning.png" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Morning</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+            <ListViewItem x:Name="afternoon" Tag="Afternoon">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=afternoon, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}" Padding="5">
+                        <Image Source="ms-appx:///Assets/Afternoon.png" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Afternoon</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+            <ListViewItem x:Name="evening" Tag="Evening">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=evening, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}" Padding="5">
+                        <Image Source="ms-appx:///Assets/Evening.png" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Evening</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+            <ListViewItem x:Name="twilight" Tag="Twilight">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=twilight, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}" Padding="5">
+                        <Image Source="ms-appx:///Assets/Twilight.png" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Twilight</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+            <ListViewItem x:Name="night" Tag="Night">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=night, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}">
+                        <Image Source="ms-appx:///Assets/Night.png" Width="32" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Night</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+        </ListView>
+        <Border Grid.Row="1" Style="{StaticResource Separator}" Visibility="{x:Bind ViewModel.IsOpen, Mode=OneWay}" />
+        <ListView x:Name="weatherSelector" Grid.Row="2" IsEnabled="{x:Bind ViewModel.CanSelectWeather, Mode=OneWay}" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.SelectedWeather, Mode=TwoWay}">
+            <ListViewItem x:Name="sun" Tag="Sunny">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=sun, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}">
+                        <Image Source="ms-appx:///Assets/Sun.png" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Sun</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+            <ListViewItem x:Name="sunset" Tag="Sunset" IsEnabled="{x:Bind ViewModel.CanSelectSunset, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=sunset, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}" Padding="5">
+                        <Image Source="ms-appx:///Assets/Sunset.png" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Sunset</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+            <ListViewItem x:Name="cloudy" Tag="Cloudy">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=cloudy, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}">
+                        <Image Source="ms-appx:///Assets/Cloud.png" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Cloudy</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+        </ListView>
+    </Grid>
+</UserControl>
