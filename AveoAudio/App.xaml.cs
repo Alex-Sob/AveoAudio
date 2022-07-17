@@ -91,7 +91,7 @@ namespace AveoAudio
             deferral.Complete();
         }
 
-        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
         {
             var file = Path.Combine(ApplicationData.Current.LocalFolder.Path, "Exception.txt");
             File.WriteAllText(file, e.Exception.ToString());

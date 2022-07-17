@@ -239,7 +239,7 @@
                                                 <CompositeTransform x:Name="PivotLayoutElementTranslateTransform"/>
                                             </Grid.RenderTransform>
                                             <ContentPresenter x:Name="LeftHeaderPresenter" ContentTemplate="{TemplateBinding LeftHeaderTemplate}" Content="{TemplateBinding LeftHeader}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                            <ContentControl x:Name="HeaderClipper" Grid.Column="1" HorizontalContentAlignment="Stretch" UseSystemFocusVisuals="True">
+                                            <ContentControl x:Name="HeaderClipper" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" UseSystemFocusVisuals="True">
                                                 <ContentControl.Clip>
                                                     <RectangleGeometry x:Name="HeaderClipperGeometry"/>
                                                 </ContentControl.Clip>
@@ -401,17 +401,16 @@
                                     </VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
-                            <ContentPresenter x:Name="ContentPresenter" AutomationProperties.AccessibilityView="Raw" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentTransitions="{TemplateBinding ContentTransitions}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" Padding="{TemplateBinding Padding}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            <ContentPresenter x:Name="ContentPresenter" AutomationProperties.AccessibilityView="Raw" ContentTemplate="{TemplateBinding ContentTemplate}" ContentTransitions="{TemplateBinding ContentTransitions}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" Padding="{TemplateBinding Padding}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+                                <ContentPresenter.Content>
+                                    <Grid>
+                                        <TextBlock FontSize="46">&#xE149;</TextBlock>
+                                        <TextBlock FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center">&#xE90B;</TextBlock>
+                                    </Grid>
+                                </ContentPresenter.Content>
+                            </ContentPresenter>
                         </Grid>
                     </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Content">
-                <Setter.Value>
-                    <Grid>
-                        <TextBlock FontSize="48">&#xE149;</TextBlock>
-                        <TextBlock FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center">&#xE90B;</TextBlock>
-                    </Grid>
                 </Setter.Value>
             </Setter>
         </Style>
