@@ -13,8 +13,6 @@ namespace AveoAudio.ViewModels
             this.appState = appState;
         }
 
-        public bool CanSelectSunset { get; set; } = false;
-
         public bool CanSelectWeather { get; set; } = true;
 
         public string SelectedTimeOfDay
@@ -25,13 +23,9 @@ namespace AveoAudio.ViewModels
                 this.appState.TimeOfDay = ParseEnum<TimeOfDay>(value);
 
                 this.CanSelectWeather = this.appState.TimeOfDay < TimeOfDay.Twilight;
-                this.CanSelectSunset = this.appState.TimeOfDay == TimeOfDay.Evening;
-
                 this.OnPropertyChanged(nameof(CanSelectWeather));
-                this.OnPropertyChanged(nameof(CanSelectSunset));
 
                 if (!CanSelectWeather) this.SelectedWeather = null;
-                if (!CanSelectSunset && this.appState.Weather == Weather.Sunset) this.SelectedWeather = null;
             }
         }
 

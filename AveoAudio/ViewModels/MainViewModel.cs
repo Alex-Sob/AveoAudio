@@ -8,6 +8,7 @@ using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace AveoAudio.ViewModels
 {
@@ -216,16 +217,17 @@ namespace AveoAudio.ViewModels
             this.Playlist = playlist.Items.Any() ? playlist : null;
             playlist.CurrentItemChanged += this.OnTrackChanged;
 
-            var timeOfDay = this.Selectors.SelectedTimeOfDay;
-            var weather = this.Selectors.SelectedWeather;
-            this.Image = await this.imageManager.GetNextImageAsync(timeOfDay, weather);
+            var timeOfDay = this.Selectors.SelectedTimeOfDay ?? "";
+            var weather = this.Selectors.SelectedWeather ?? "";
+            var nextImagePath = this.imageManager.GetNextImage(timeOfDay, weather);
+            this.Image = new BitmapImage(new Uri(nextImagePath));
 
             this.SelectedPane = (int)Pane.NowPlaying;
         }
 
-        private async void Initialize()
+        private void Initialize()
         {
-            this.Image = await this.imageManager.GetNextDefaultImageAsync();
+            this.Image = new BitmapImage(new Uri(this.imageManager.GetNextDefaultImage()));
         }
 
         private void OnPositionChanged(MediaPlaybackSession sender, object args)

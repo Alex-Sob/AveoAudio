@@ -2,8 +2,8 @@
 {
     public class AppState : NotificationBase
     {
-        private TimeOfDay? timeOfDay = default(TimeOfDay);
-        private Weather? weather = default(Weather);
+        private TimeOfDay? timeOfDay;
+        private Weather? weather;
 
         public TimeOfDay? TimeOfDay
         {

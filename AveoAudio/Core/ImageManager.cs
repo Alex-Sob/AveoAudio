@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Windows.Storage;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
 
 namespace AveoAudio
 {
@@ -17,68 +13,53 @@ namespace AveoAudio
         private const string DefaultFolder = "Default";
 
         private readonly string basePath;
-        private readonly Dictionary<string, (int, IList<StorageFile>)> imagesByFolder;
+        private readonly Dictionary<string, (int, IList<string>)> imagesByFolder;
 
         public ImageManager(string basePath)
         {
             this.basePath = basePath;
-            this.imagesByFolder = new Dictionary<string, (int, IList<StorageFile>)>();
+            this.imagesByFolder = new Dictionary<string, (int, IList<string>)>();
         }
 
-        public Task<ImageSource> GetNextDefaultImageAsync()
+        public string GetNextDefaultImage()
         {
-            return this.GetNextImageAsync(DefaultFolder);
+            return this.GetNextImage(Path.Combine(this.basePath, DefaultFolder));
         }
 
-        public async Task<ImageSource> GetNextImageAsync(string timeOfDay, string weather)
+        public string GetNextImage(string timeOfDay, string weather)
         {
-            string folder;
+            var folder = Path.Combine(this.basePath, timeOfDay, weather);
+            var nextImage = this.GetNextImage(folder);
+            if (nextImage != null) return nextImage;
 
-            switch (timeOfDay)
-            {
-                case nameof(TimeOfDay.Twilight):
-                case nameof(TimeOfDay.Night):
-                    folder = timeOfDay;
-                    break;
-                default:
-                    var sunset = nameof(Weather.Sunset);
-                    folder = weather == sunset ? sunset : $"{weather} {timeOfDay}";
-                    break;
-            }
+            folder = Path.Combine(this.basePath, timeOfDay);
+            nextImage = this.GetNextImage(folder);
+            if (nextImage != null) return nextImage;
 
-            return await GetNextImageAsync(folder) ?? await GetNextImageAsync(DefaultFolder);
+            return this.GetNextDefaultImage();
         }
 
-        private async Task<IReadOnlyList<StorageFile>> GetImagesAsync(string path)
+        private string GetNextImage(string path)
         {
-            path = Path.Combine(this.basePath, path);
-            if (!Directory.Exists(path)) return new List<StorageFile>();
-            var folder = await StorageFolder.GetFolderFromPathAsync(path);
-            return await folder.GetFilesAsync();
-        }
-
-        private async Task<ImageSource> GetNextImageAsync(string folder)
-        {
-            StorageFile nextImage = null;
-
-            if (this.imagesByFolder.TryGetValue(folder, out (int current, IList<StorageFile> images) item))
+            if (this.imagesByFolder.TryGetValue(path, out (int current, IList<string> images) item))
             {
                 var current = item.current < item.images.Count - 1 ? item.current + 1 : 0;
-                this.imagesByFolder[folder] = (current, item.images);
-                nextImage = item.images[current];
+                this.imagesByFolder[path] = (current, item.images);
+                return item.images[current];
             }
             else
             {
-                var images = await GetImagesAsync(folder);
-                if (images.Any())
+                var images = Directory.Exists(path) ? Directory.EnumerateFiles(path) : Enumerable.Empty<string>();
+                var randomizedImages = images.Randomize().ToList();
+
+                if (randomizedImages.Any())
                 {
-                    var randomizedImages = images.Randomize().ToList();
-                    this.imagesByFolder[folder] = (0, randomizedImages);
-                    nextImage = randomizedImages[0];
+                    this.imagesByFolder[path] = (0, randomizedImages);
+                    return randomizedImages[0];
                 }
             }
 
-            return nextImage != null ? new BitmapImage(new Uri(nextImage.Path)) : null;
+            return null;
         }
     }
 }

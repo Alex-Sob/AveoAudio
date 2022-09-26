@@ -3,7 +3,6 @@
     public enum Weather
     {
         Sunny,
-        Sunset,
         Cloudy
     }
 }

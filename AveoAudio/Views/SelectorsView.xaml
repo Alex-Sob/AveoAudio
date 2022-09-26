@@ -57,14 +57,24 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <ListView x:Name="timeOfDaySelector" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.SelectedTimeOfDay, Mode=TwoWay}">
-            <ListViewItem x:Name="morning" Tag="Morning">
+            <ListViewItem x:Name="earlyMorn" Tag="EarlyMorn">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
-                        IsChecked="{Binding IsSelected, ElementName=morning, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}" Padding="5">
-                        <Image Source="ms-appx:///Assets/Morning.png" />
+                        IsChecked="{Binding IsSelected, ElementName=earlyMorn, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}" Padding="0">
+                        <Image Source="/Assets/EarlyMorn.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Morning</TextBlock>
+                    <TextBlock Style="{StaticResource OptionText}">Early Morning</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+            <ListViewItem x:Name="lateMorn" Tag="LateMorn">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=lateMorn, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}" Padding="0">
+                        <Image Source="ms-appx:///Assets/LateMorn.png" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Late Morning</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="afternoon" Tag="Afternoon">
@@ -77,14 +87,24 @@
                     <TextBlock Style="{StaticResource OptionText}">Afternoon</TextBlock>
                 </StackPanel>
             </ListViewItem>
-            <ListViewItem x:Name="evening" Tag="Evening">
+            <ListViewItem x:Name="earlyEvening" Tag="EarlyEvening">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
-                        IsChecked="{Binding IsSelected, ElementName=evening, Mode=TwoWay}"
+                        IsChecked="{Binding IsSelected, ElementName=earlyEvening, Mode=TwoWay}"
                         Style="{StaticResource TileStyle}" Padding="5">
                         <Image Source="ms-appx:///Assets/Evening.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Evening</TextBlock>
+                    <TextBlock Style="{StaticResource OptionText}">Early Evening</TextBlock>
+                </StackPanel>
+            </ListViewItem>
+            <ListViewItem x:Name="sunset" Tag="Sunset">
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton
+                        IsChecked="{Binding IsSelected, ElementName=sunset, Mode=TwoWay}"
+                        Style="{StaticResource TileStyle}" Padding="5">
+                        <Image Source="ms-appx:///Assets/Sunset.png" />
+                    </ToggleButton>
+                    <TextBlock Style="{StaticResource OptionText}">Sunset</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="twilight" Tag="Twilight">
@@ -118,16 +138,6 @@
                         <Image Source="ms-appx:///Assets/Sun.png" />
                     </ToggleButton>
                     <TextBlock Style="{StaticResource OptionText}">Sun</TextBlock>
-                </StackPanel>
-            </ListViewItem>
-            <ListViewItem x:Name="sunset" Tag="Sunset" IsEnabled="{x:Bind ViewModel.CanSelectSunset, Mode=OneWay}">
-                <StackPanel Orientation="Horizontal">
-                    <ToggleButton
-                        IsChecked="{Binding IsSelected, ElementName=sunset, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}" Padding="5">
-                        <Image Source="ms-appx:///Assets/Sunset.png" />
-                    </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Sunset</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="cloudy" Tag="Cloudy">
