@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 
@@ -37,19 +37,6 @@ namespace AveoAudio
             return (dateCreated, rawTags);
         }
 
-        private static IDictionary<ReadOnlyMemory<char>, TimesOfDay> GetTimesOfDay()
-        {
-            var names = Enum.GetNames(typeof(TimesOfDay));
-            var result = new Dictionary<ReadOnlyMemory<char>, TimesOfDay>(names.Length);
-
-            foreach (var name in names)
-            {
-                result.Add(name.AsMemory(), Enum.Parse<TimesOfDay>(name));
-            }
-
-            return result;
-        }
-
         public (TimesOfDay timesOfDay, BitVector32 customTags) ParseTags(string rawTags)
         {
             var timesOfDay = default(TimesOfDay);
@@ -80,6 +67,19 @@ namespace AveoAudio
             }
 
             return (timesOfDay, customTags);
+        }
+
+        private static IDictionary<ReadOnlyMemory<char>, TimesOfDay> GetTimesOfDay()
+        {
+            var names = Enum.GetNames(typeof(TimesOfDay));
+            var result = new Dictionary<ReadOnlyMemory<char>, TimesOfDay>(names.Length);
+
+            foreach (var name in names)
+            {
+                result.Add(name.AsMemory(), Enum.Parse<TimesOfDay>(name));
+            }
+
+            return result;
         }
 
         private static bool TryGetValue<TValue>(IDictionary<ReadOnlyMemory<char>, TValue> dictionary, ReadOnlySpan<char> key, out TValue value)

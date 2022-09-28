@@ -44,7 +44,8 @@ namespace AveoAudio.ViewModels
             this.imageManager = new ImageManager(imagesPath);
 
             var trackDataParser = new TrackDataParser(this.settings);
-            this.playlistBuilder = new PlaylistBuilder(this.settings, this.appState, trackDataParser);
+            var trackManager = new TrackManager(trackDataParser);
+            this.playlistBuilder = new PlaylistBuilder(this.settings, this.appState, trackManager);
             this.dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
 
             this.Selectors = new SelectorsViewModel(this.appState);

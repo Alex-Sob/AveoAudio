@@ -108,6 +108,7 @@
     <Compile Include="Core\PlaylistProfile.cs" />
     <Compile Include="Core\StateManager.cs" />
     <Compile Include="Core\TrackDataParser.cs" />
+    <Compile Include="Core\TrackManager.cs" />
     <Compile Include="Model\AppSettings.cs" />
     <Compile Include="Model\Selector.cs" />
     <Compile Include="Model\TimesOfDay.cs" />
