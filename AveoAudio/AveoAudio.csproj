@@ -107,8 +107,10 @@
     <Compile Include="Core\ImageManager.cs" />
     <Compile Include="Core\PlaylistProfile.cs" />
     <Compile Include="Core\StateManager.cs" />
+    <Compile Include="Core\TrackDataParser.cs" />
     <Compile Include="Model\AppSettings.cs" />
     <Compile Include="Model\Selector.cs" />
+    <Compile Include="Model\TimesOfDay.cs" />
     <Compile Include="Mvvm\NotificationBase.cs" />
     <Compile Include="Mvvm\DelegateCommand.cs" />
     <Compile Include="Mvvm\DelegateCommand{T}.cs" />
@@ -117,7 +119,6 @@
     </Compile>
     <Compile Include="Model\Track.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="Model\TimeOfDay.cs" />
     <Compile Include="Model\Weather.cs" />
     <Compile Include="Core\PlaylistBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

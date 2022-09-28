@@ -10,46 +10,37 @@ namespace AveoAudio
 {
     public class PlaylistBuilder
     {
-        private readonly Dictionary<string, IList<Track>> tracksByGenre = new Dictionary<string, IList<Track>>();
         private readonly AppSettings settings;
+        private readonly AppState appState;
+        private readonly TrackDataParser trackDataParser;
+        private readonly Dictionary<string, IList<Track>> tracksByGenre = new Dictionary<string, IList<Track>>();
 
-        public PlaylistBuilder(AppSettings settings)
+        public PlaylistBuilder(AppSettings settings, AppState appState, TrackDataParser trackDataParser)
         {
             this.settings = settings;
+            this.appState = appState;
+            this.trackDataParser = trackDataParser;
         }
 
         public async Task<IList<Track>> BuildPlaylistAsync(PlaylistProfile profile)
         {
-            var allTracks = await SelectTracksAsync(profile);
-
-            var newerTracksQuota = this.settings.PlaylistSize - this.settings.OlderTracksQuota;
+            var tracks = await SelectTracksAsync(profile);
             var playlist = new List<Track>(this.settings.PlaylistSize);
-
-            var tracks =
-                from track in allTracks.Take(newerTracksQuota)
-                select track;
-
-            if (allTracks.Count > newerTracksQuota)
-            {
-                var random = new Random();
-
-                var olderTracks =
-                    from track in GetRange(allTracks, newerTracksQuota)
-                    let rand = random.Next(allTracks.Count)
-                    orderby rand
-                    select track;
-
-                tracks = tracks.Concat(olderTracks.Take(this.settings.OlderTracksQuota));
-            }
-
             playlist.AddRange(tracks.Randomize());
             return playlist;
         }
 
-        private static async Task<IEnumerable<string>> GetGenresAsync()
+        private int CreateMask(ISet<string> filterTags)
         {
-            return from folder in await KnownFolders.MusicLibrary.GetFoldersAsync()
-                   select folder.Name;
+            int bitMask = 1, result = 0;
+
+            for (int i = 0; i < this.settings.Tags.Count; i++)
+            {
+                result |= filterTags.Contains(this.settings.Tags[i]) ? bitMask : 0;
+                bitMask <<= 1;
+            }
+
+            return result;
         }
 
         private static IEnumerable<T> GetRange<T>(IList<T> list, int index)
@@ -69,7 +60,7 @@ namespace AveoAudio
 
             var tracks = await Task.WhenAll(
                 from file in files
-                select Track.CreateAsync(file, genre));
+                select Track.CreateAsync(file, genre, this.trackDataParser));
 
             this.tracksByGenre[genre] = tracks;
             return tracks;
@@ -98,14 +89,20 @@ namespace AveoAudio
         {
             var allTracks = await this.GetTracksAsync(profile.Genres);
             var tracks = new List<Track>(allTracks.count);
+
             var filterTags = profile.FilterTags;
             var excludeTags = profile.ExcludeTags;
 
+            var filterMask = CreateMask(filterTags);
+            var excludeMask = CreateMask(excludeTags);
+
+            var timesOfDay = this.appState.TimesOfDay ?? TimesOfDay.None;
+
             tracks.AddRange(
                 from track in allTracks.tracks
-                where excludeTags.Count == 0 || !excludeTags.Overlaps(track.Tags)
-                where filterTags.Count == 0 || filterTags.Overlaps(track.Tags)
-                orderby track.DateCreated descending
+                where track.TimesOfDay == TimesOfDay.None || track.TimesOfDay.HasFlag(timesOfDay)
+                where excludeTags.Count == 0 || (excludeMask & track.CustomTags.Data) == 0
+                where filterTags.Count == 0 || (filterMask & track.CustomTags.Data) == filterMask
                 select track);
 
             return tracks;

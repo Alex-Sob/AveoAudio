@@ -2,10 +2,10 @@
 {
     public class AppState : NotificationBase
     {
-        private TimeOfDay? timeOfDay;
+        private TimesOfDay? timeOfDay;
         private Weather? weather;
 
-        public TimeOfDay? TimeOfDay
+        public TimesOfDay? TimesOfDay
         {
             get => this.timeOfDay;
             set => this.SetProperty(ref this.timeOfDay, value);

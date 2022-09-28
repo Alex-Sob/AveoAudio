@@ -3,8 +3,10 @@
 namespace AveoAudio
 {
     [Flags]
-    public enum TimeOfDay
+    public enum TimesOfDay
     {
+        None = 0,
+
         EarlyMorn = 1,
         LateMorn = 2,
         Afternoon = 4,

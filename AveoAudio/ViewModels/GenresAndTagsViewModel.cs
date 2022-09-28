@@ -48,13 +48,16 @@ namespace AveoAudio.ViewModels
 
         private async void InitializeGenres()
         {
+            var folders = await KnownFolders.MusicLibrary.GetFoldersAsync();
+
             var genres =
-                from folder in await KnownFolders.MusicLibrary.GetFoldersAsync()
+                from folder in folders
                 let genre = folder.Name
                 orderby genre
                 select genre;
 
-            this.Genres = genres.ToList();
+            this.Genres = new List<string>(folders.Count);
+            this.Genres.AddRange(genres);
             this.PlaylistProfile.Genres.AddRange(this.Genres);
 
             this.OnPropertyChanged(nameof(this.Genres));
@@ -79,7 +82,7 @@ namespace AveoAudio.ViewModels
 
         private void OnAppStateChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(AppState.TimeOfDay) || e.PropertyName == nameof(AppState.Weather))
+            if (e.PropertyName == nameof(AppState.TimesOfDay) || e.PropertyName == nameof(AppState.Weather))
             {
                 this.RefreshDefaultTags();
 
@@ -98,7 +101,7 @@ namespace AveoAudio.ViewModels
             this.PlaylistProfile.FilterTags.Clear();
             this.PlaylistProfile.ExcludeTags.Clear();
 
-            RefreshDefaultTags(this.appState.TimeOfDay);
+            RefreshDefaultTags(this.appState.TimesOfDay);
             RefreshDefaultTags(this.appState.Weather);
         }
 

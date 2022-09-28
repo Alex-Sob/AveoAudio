@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Collections.Specialized;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -11,6 +11,8 @@ namespace AveoAudio
 {
     public class Track
     {
+        public BitVector32 CustomTags { get; private set; }
+
         public DateTime DateCreated { get; private set; }
 
         public StorageFile File { get; private set; }
@@ -23,13 +25,13 @@ namespace AveoAudio
 
         public string RawTags { get; private set; }
 
-        public IList<string> Tags { get; private set; }
+        public TimesOfDay TimesOfDay { get; private set; }
 
-        public static async Task<Track> CreateAsync(StorageFile file, string genre)
+        public static async Task<Track> CreateAsync(StorageFile file, string genre, TrackDataParser dataParser)
         {
             var props = await file.Properties.GetMusicPropertiesAsync();
-            var (dateCreated, rawTags) = ExtractCustomProperties(file, props);
-            var tags = ParseTags(rawTags);
+            var (dateCreated, rawTags) = TrackDataParser.ExtractCustomProperties(file, props);
+            var (timesOfDay, customTags) = dataParser.ParseTags(rawTags);
 
             return new Track
             {
@@ -38,17 +40,21 @@ namespace AveoAudio
                 Properties = props,
                 DateCreated = dateCreated,
                 RawTags = rawTags,
-                Tags = tags,
+                TimesOfDay = timesOfDay,
+                CustomTags = customTags,
             };
         }
 
-        public async Task ApplyRawTags(string value)
+        public async Task ApplyRawTags(string value, TrackDataParser dataParser)
         {
-            this.Properties.Subtitle = $"{this.DateCreated.ToString("dd.MM.yyyy")};{value}";
+            this.Properties.Subtitle = $"{this.DateCreated:dd.MM.yyyy};{value}";
             await this.Properties.SavePropertiesAsync();
 
             this.RawTags = value;
-            this.Tags = ParseTags(value);
+            var (timesOfDay, customTags) = dataParser.ParseTags(value);
+
+            this.TimesOfDay = timesOfDay;
+            this.CustomTags = customTags;
         }
 
         public override string ToString()
@@ -60,26 +66,6 @@ namespace AveoAudio
                 return $"{this.Properties.Artist} - {this.Properties.Title}";
 
             return this.FileName;
-        }
-
-        private static (DateTime dateCreated, string rawTags) ExtractCustomProperties(StorageFile file, MusicProperties props)
-        {
-            var parts = props.Subtitle.Split(';');
-
-            var provider = CultureInfo.InvariantCulture;
-            var style = DateTimeStyles.None;
-
-            var hasDate = DateTime.TryParseExact(parts[0], "dd.MM.yyyy", provider, style, out DateTime dateCreated);
-            dateCreated = hasDate ? dateCreated : file.DateCreated.Date;
-
-            var rawTags = parts.Length > 1 ? parts[1] : null;
-
-            return (dateCreated, rawTags);
-        }
-
-        private static IList<string> ParseTags(string rawTags)
-        {
-            return !string.IsNullOrEmpty(rawTags) ? rawTags.Split(',') : new string[0];
         }
     }
 }
