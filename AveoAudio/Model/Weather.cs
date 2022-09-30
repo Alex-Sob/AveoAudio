@@ -2,7 +2,8 @@
 {
     public enum Weather
     {
-        Sunny,
+        None,
+        Sun,
         Cloudy
     }
 }

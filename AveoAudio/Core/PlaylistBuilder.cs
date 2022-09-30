@@ -22,10 +22,10 @@ namespace AveoAudio
         public async Task<IList<Track>> BuildPlaylistAsync(PlaylistProfile profile)
         {
             var tracks = await SelectTracksAsync(profile);
-
             this.playlist = this.playlist ?? new List<Track>(this.settings.PlaylistSize);
+
             this.playlist.Clear();
-            playlist.AddRange(tracks.Randomize().Take(this.playlist.Count));
+            playlist.AddRange(tracks.Randomize().Take(this.settings.PlaylistSize));
 
             return playlist;
         }
@@ -53,10 +53,11 @@ namespace AveoAudio
             var filterMask = CreateMask(filterTags);
             var excludeMask = CreateMask(excludeTags);
 
-            var timesOfDay = this.appState.TimesOfDay ?? TimesOfDay.None;
+            var timeOfDay = this.appState.TimeOfDay ?? TimesOfDay.None;
 
             return from track in tracks
-                   where track.TimesOfDay == TimesOfDay.None || track.TimesOfDay.HasFlag(timesOfDay)
+                   where track.TimesOfDay == TimesOfDay.None || track.TimesOfDay.HasFlag(timeOfDay)
+                   where this.appState.Weather == null || track.Weather == Weather.None || track.Weather == this.appState.Weather
                    where excludeTags.Count == 0 || (excludeMask & track.CustomTags.Data) == 0
                    where filterTags.Count == 0 || (filterMask & track.CustomTags.Data) == filterMask
                    select track;

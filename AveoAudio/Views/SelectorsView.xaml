@@ -130,7 +130,7 @@
         </ListView>
         <Border Grid.Row="1" Style="{StaticResource Separator}" Visibility="{x:Bind ViewModel.IsOpen, Mode=OneWay}" />
         <ListView x:Name="weatherSelector" Grid.Row="2" IsEnabled="{x:Bind ViewModel.CanSelectWeather, Mode=OneWay}" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.SelectedWeather, Mode=TwoWay}">
-            <ListViewItem x:Name="sun" Tag="Sunny">
+            <ListViewItem x:Name="sun" Tag="Sun">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=sun, Mode=TwoWay}"

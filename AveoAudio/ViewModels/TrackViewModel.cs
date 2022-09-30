@@ -32,10 +32,5 @@ namespace AveoAudio.ViewModels
         public Track Track { get; }
 
         public string Value { get; set; }
-
-        public Task SaveChangesAsync(TrackDataParser dataParser)
-        {
-            return this.Track.ApplyRawTags(this.Value, dataParser);
-        }
     }
 }

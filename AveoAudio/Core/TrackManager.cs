@@ -13,9 +13,9 @@ namespace AveoAudio
         private readonly TrackDataParser trackDataParser;
         private readonly Dictionary<string, IList<Track>> tracksByGenre = new Dictionary<string, IList<Track>>();
 
-        public TrackManager(TrackDataParser trackDataParser)
+        public TrackManager(AppSettings settings)
         {
-            this.trackDataParser = trackDataParser;
+            this.trackDataParser = new TrackDataParser(settings);
         }
 
         public async Task<IEnumerable<Track>> GetTracksAsync(IEnumerable<string> genres)
@@ -36,6 +36,30 @@ namespace AveoAudio
             return tracks;
         }
 
+        public async Task UpdateTags(Track track, string rawTags)
+        {
+            track.Properties.Subtitle = $"{track.DateCreated:dd.MM.yyyy};{rawTags}";
+            await track.Properties.SavePropertiesAsync();
+            this.trackDataParser.ParseTags(track, rawTags);
+        }
+
+        private async Task<Track> LoadTrackAsync(string genre, StorageFile file)
+        {
+            var props = await file.Properties.GetMusicPropertiesAsync();
+            var (dateCreated, rawTags) = TrackDataParser.ExtractCustomProperties(file, props);
+
+            var track = new Track
+            {
+                File = file,
+                Genre = genre,
+                Properties = props,
+                DateCreated = dateCreated,
+            };
+
+            this.trackDataParser.ParseTags(track, rawTags);
+            return track;
+        }
+
         private async Task<IList<Track>> LoadTracksAsync(string genre)
         {
             var queryOptions = new QueryOptions { FolderDepth = FolderDepth.Deep, FileTypeFilter = { ".mp3" } };
@@ -45,7 +69,7 @@ namespace AveoAudio
 
             var tracks = await Task.WhenAll(
                 from file in files
-                select Track.CreateAsync(file, genre, this.trackDataParser));
+                select this.LoadTrackAsync(genre, file));
 
             this.tracksByGenre[genre] = tracks;
             return tracks;

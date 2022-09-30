@@ -5,7 +5,7 @@
         private TimesOfDay? timeOfDay;
         private Weather? weather;
 
-        public TimesOfDay? TimesOfDay
+        public TimesOfDay? TimeOfDay
         {
             get => this.timeOfDay;
             set => this.SetProperty(ref this.timeOfDay, value);

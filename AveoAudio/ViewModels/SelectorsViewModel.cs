@@ -17,12 +17,12 @@ namespace AveoAudio.ViewModels
 
         public string SelectedTimeOfDay
         {
-            get => this.appState.TimesOfDay.ToString();
+            get => this.appState.TimeOfDay.ToString();
             set
             {
-                this.appState.TimesOfDay = ParseEnum<TimesOfDay>(value);
+                this.appState.TimeOfDay = ParseEnum<TimesOfDay>(value);
 
-                this.CanSelectWeather = this.appState.TimesOfDay < TimesOfDay.Twilight;
+                this.CanSelectWeather = this.appState.TimeOfDay < TimesOfDay.Sunset;
                 this.OnPropertyChanged(nameof(CanSelectWeather));
 
                 if (!CanSelectWeather) this.SelectedWeather = null;

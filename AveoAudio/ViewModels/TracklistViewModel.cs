@@ -11,15 +11,15 @@ namespace AveoAudio.ViewModels
     public class TracklistViewModel : NotificationBase
     {
         private readonly MainViewModel mainViewModel;
-        private readonly TrackDataParser trackDataParser;
+        private readonly TrackManager trackManager;
 
         private TrackViewModel selectedTrack;
         private bool showAll = true;
 
-        public TracklistViewModel(MainViewModel mainViewModel, TrackDataParser trackDataParser)
+        public TracklistViewModel(MainViewModel mainViewModel, TrackManager trackManager)
         {
             this.mainViewModel = mainViewModel;
-            this.trackDataParser = trackDataParser;
+            this.trackManager = trackManager;
             this.PlayTrackCommand = new DelegateCommand(this.PlayTrack);
             this.SwitchViewCommand = new DelegateCommand<string>(this.SwitchView);
         }
@@ -71,7 +71,7 @@ namespace AveoAudio.ViewModels
             var tasks =
                 from editor in this.Tracks
                 where editor.HasChanges
-                select editor.SaveChangesAsync(this.trackDataParser);
+                select this.trackManager.UpdateTags(editor.Track, editor.Value);
 
             this.mainViewModel.GetBusy(Task.WhenAll(tasks), "Saving");
         }

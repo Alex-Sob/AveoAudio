@@ -82,7 +82,7 @@ namespace AveoAudio.ViewModels
 
         private void OnAppStateChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(AppState.TimesOfDay) || e.PropertyName == nameof(AppState.Weather))
+            if (e.PropertyName == nameof(AppState.TimeOfDay) || e.PropertyName == nameof(AppState.Weather))
             {
                 this.RefreshDefaultTags();
 
@@ -101,7 +101,7 @@ namespace AveoAudio.ViewModels
             this.PlaylistProfile.FilterTags.Clear();
             this.PlaylistProfile.ExcludeTags.Clear();
 
-            RefreshDefaultTags(this.appState.TimesOfDay);
+            RefreshDefaultTags(this.appState.TimeOfDay);
             RefreshDefaultTags(this.appState.Weather);
         }
 

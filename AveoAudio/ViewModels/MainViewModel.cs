@@ -43,14 +43,13 @@ namespace AveoAudio.ViewModels
             var imagesPath = !string.IsNullOrEmpty(settings.ImagesPath) ? settings.ImagesPath : ImageManager.DefaultPath;
             this.imageManager = new ImageManager(imagesPath);
 
-            var trackDataParser = new TrackDataParser(this.settings);
-            var trackManager = new TrackManager(trackDataParser);
+            var trackManager = new TrackManager(this.settings);
             this.playlistBuilder = new PlaylistBuilder(this.settings, this.appState, trackManager);
             this.dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
 
             this.Selectors = new SelectorsViewModel(this.appState);
             this.GenresAndTags = new GenresAndTagsViewModel(this.appState, this.settings);
-            this.Tracklist = new TracklistViewModel(this, trackDataParser);
+            this.Tracklist = new TracklistViewModel(this, trackManager);
 
             this.mediaPlayer.PlaybackSession.PositionChanged += this.OnPositionChanged;
 

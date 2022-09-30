@@ -37,10 +37,11 @@ namespace AveoAudio
             return (dateCreated, rawTags);
         }
 
-        public (TimesOfDay timesOfDay, BitVector32 customTags) ParseTags(string rawTags)
+        public void ParseTags(Track track, string rawTags)
         {
             var timesOfDay = default(TimesOfDay);
             var customTags = new BitVector32();
+            Weather weather = Weather.None;
 
             if (!string.IsNullOrEmpty(rawTags))
             {
@@ -61,12 +62,16 @@ namespace AveoAudio
                     {
                         customTags[1 << customTagIndex] = true;
                     }
+                    else if (weather == Weather.None) TryParseWeather(tag, out weather);
 
                     current += length + 1;
                 }
             }
 
-            return (timesOfDay, customTags);
+            track.RawTags = rawTags;
+            track.TimesOfDay = timesOfDay;
+            track.CustomTags = customTags;
+            track.Weather = weather;
         }
 
         private static IDictionary<ReadOnlyMemory<char>, TimesOfDay> GetTimesOfDay()
@@ -82,11 +87,11 @@ namespace AveoAudio
             return result;
         }
 
-        private static bool TryGetValue<TValue>(IDictionary<ReadOnlyMemory<char>, TValue> dictionary, ReadOnlySpan<char> key, out TValue value)
+        private static bool TryGetValue<TValue>(IDictionary<ReadOnlyMemory<char>, TValue> dictionary, ReadOnlySpan<char> tag, out TValue value)
         {
             foreach (var pair in dictionary)
             {
-                if (key.Equals(pair.Key.Span, StringComparison.Ordinal))
+                if (tag.Equals(pair.Key.Span, StringComparison.Ordinal))
                 {
                     value = pair.Value;
                     return true;
@@ -125,6 +130,22 @@ namespace AveoAudio
             }
 
             return true;
+        }
+
+        private static bool TryParseWeather(ReadOnlySpan<char> tag, out Weather weather)
+        {
+            weather = Weather.None;
+
+            if (tag.Equals(nameof(Weather.Sun).AsSpan(), StringComparison.Ordinal))
+            {
+                weather = Weather.Sun;
+            }
+            else if (tag.Equals(nameof(Weather.Cloudy).AsSpan(), StringComparison.Ordinal))
+            {
+                weather = Weather.Cloudy;
+            }
+
+            return weather != Weather.None;
         }
     }
 }
