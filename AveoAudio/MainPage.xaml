@@ -18,6 +18,7 @@
         <SolidColorBrush x:Key="OverlayBackground" Opacity="0.8" Color="White" />
         <SolidColorBrush x:Key="PivotHeaderBackground" Color="LightGray" Opacity="0.5" />
         <SolidColorBrush x:Key="CurrentTrackBackground" Opacity="0.2" Color="Black" />
+        <SolidColorBrush x:Key="MediaPlayerBackground" Color="WhiteSmoke" Opacity="0.3" />
         <SolidColorBrush x:Key="BusyIndicatorBackground" Opacity="0.3" Color="Black" />
 
         <views:DateFormatter x:Key="DateFormatter" />
@@ -558,12 +559,7 @@
     </Page.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        
-        <Image Grid.RowSpan="2" Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Fill" />
+        <Image Source="{x:Bind ViewModel.Image, Mode=OneWay}" Stretch="Fill" />
 
         <SplitView x:Name="splitView" CompactPaneLength="62" IsPaneOpen="{x:Bind ViewModel.Selectors.IsOpen, Mode=TwoWay}">
             <SplitView.Pane>
@@ -582,6 +578,11 @@
             </SplitView.Pane>
             <SplitView.Content>
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
                     <Pivot Style="{StaticResource Pivot}" ItemContainerStyle="{StaticResource PivotItem}" SelectedIndex="{x:Bind ViewModel.SelectedPane, Mode=TwoWay}">
                         <Pivot.RightHeader>
                             <StackPanel Background="{StaticResource PivotHeaderBackground}" Orientation="Horizontal">
@@ -629,22 +630,23 @@
                                 DataContext="{x:Bind ViewModel.Tracklist, Mode=OneWay}" />
                         </PivotItem>
                     </Pivot>
+
+                    <StackPanel Grid.Row="1" Background="{StaticResource MediaPlayerBackground}">
+                        <MediaPlayerElement
+                            x:Name="mediaPlayer"
+                            Source="{x:Bind ViewModel.Playlist, Mode=OneWay}"
+                            AreTransportControlsEnabled="True" AutoPlay="False">
+                            <MediaPlayerElement.TransportControls>
+                                <MediaTransportControls IsNextTrackButtonVisible="True" IsPreviousTrackButtonVisible="True" />
+                            </MediaPlayerElement.TransportControls>
+                        </MediaPlayerElement>
+                    </StackPanel>
                 </Grid>
             </SplitView.Content>
         </SplitView>
-        
-        <MediaPlayerElement
-            Grid.Row="1"
-            x:Name="mediaPlayer"
-            Source="{x:Bind ViewModel.Playlist, Mode=OneWay}"
-            AreTransportControlsEnabled="True" AutoPlay="False">
-            <MediaPlayerElement.TransportControls>
-                <MediaTransportControls IsNextTrackButtonVisible="True" IsPreviousTrackButtonVisible="True" />
-            </MediaPlayerElement.TransportControls>
-        </MediaPlayerElement>
 
         <ContentControl
-            Grid.RowSpan="2" d:IsHidden="True"
+            d:IsHidden="True"
             Content="{x:Bind ViewModel.BusyText, Mode=OneWay}"
             Style="{StaticResource BusyIndicator}"
             Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />

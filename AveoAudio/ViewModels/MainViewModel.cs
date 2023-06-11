@@ -7,8 +7,9 @@ using Windows.ApplicationModel.Core;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.UI.Core;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Dispatching;
 
 namespace AveoAudio.ViewModels
 {
@@ -22,7 +23,7 @@ namespace AveoAudio.ViewModels
         }
 
         private readonly AppState appState = new AppState();
-        private readonly CoreDispatcher dispatcher;
+        private readonly DispatcherQueue dispatcherQueue;
         private readonly ImageManager imageManager;
         private readonly MediaPlayer mediaPlayer;
         private readonly PlaylistBuilder playlistBuilder;
@@ -35,7 +36,7 @@ namespace AveoAudio.ViewModels
         private int selectedPane;
         private IList<Track> tracks;
 
-        public MainViewModel(AppSettings settings, MediaPlayer mediaPlayer)
+        public MainViewModel(AppSettings settings, MediaPlayer mediaPlayer, DispatcherQueue dispatcherQueue)
         {
             this.mediaPlayer = mediaPlayer;
             this.settings = settings;
@@ -45,7 +46,7 @@ namespace AveoAudio.ViewModels
 
             var trackManager = new TrackManager(this.settings);
             this.playlistBuilder = new PlaylistBuilder(this.settings, this.appState, trackManager);
-            this.dispatcher = CoreApplication.MainView.CoreWindow.Dispatcher;
+            this.dispatcherQueue = dispatcherQueue;
 
             this.Selectors = new SelectorsViewModel(this.appState);
             this.GenresAndTags = new GenresAndTagsViewModel(this.appState, this.settings);
@@ -125,12 +126,12 @@ namespace AveoAudio.ViewModels
             this.GetBusy(this.BuildPlaylistAsync(), "Building Playlist");
         }
 
-        public async void FindInTracklist()
+        public void FindInTracklist()
         {
             this.SelectedPane = (int)Pane.Tracklist;
             if (this.HasCurrentTrack)
             {
-                await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => this.Tracklist.GoToTrack(this.CurrentTrackIndex));
+                this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => this.Tracklist.GoToTrack(this.CurrentTrackIndex));
             }
         }
 
@@ -228,7 +229,8 @@ namespace AveoAudio.ViewModels
 
         private void Initialize()
         {
-            this.Image = new BitmapImage(new Uri(this.imageManager.GetNextDefaultImage()));
+            var imagePath = this.imageManager.GetNextDefaultImage();
+            this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
         }
 
         private void OnPositionChanged(MediaPlaybackSession sender, object args)
@@ -245,17 +247,17 @@ namespace AveoAudio.ViewModels
             }
         }
 
-        private async void OnTrackChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
+        private void OnTrackChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
             var index = this.CurrentTrackIndex;
             if (index < 0 || index >= this.tracks.Count) return;
 
             var track = this.tracks[index];
-            await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => this.CurrentTrack = track);
+            this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => this.CurrentTrack = track);
 
             if (index == this.Tracklist.Tracks.Count)
             {
-                await this.dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => this.Tracklist.AddTrack(this.currentTrack));
+                this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => this.Tracklist.AddTrack(this.currentTrack));
             }
         }
     }

@@ -2,9 +2,9 @@
 
 using AveoAudio.ViewModels;
 
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Navigation;
 
 namespace AveoAudio
 {
@@ -22,7 +22,8 @@ namespace AveoAudio
             base.OnNavigatedTo(e);
 
             var settings = (AppSettings)e.Parameter;
-            this.ViewModel = new MainViewModel(settings, this.mediaPlayer.MediaPlayer);
+            // TODO: Re-consider DispatcherQueue usage
+            this.ViewModel = new MainViewModel(settings, this.mediaPlayer.MediaPlayer, this.DispatcherQueue);
         }
 
         private void OnImageManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)

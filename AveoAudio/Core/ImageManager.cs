@@ -23,6 +23,7 @@ namespace AveoAudio
 
         public string GetNextDefaultImage()
         {
+            // TODO: Copy default images first time if there are none
             return this.GetNextImage(Path.Combine(this.basePath, DefaultFolder));
         }
 

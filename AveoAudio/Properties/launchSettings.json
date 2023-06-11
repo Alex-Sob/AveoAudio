@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "AveoAudio (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "AveoAudio (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
