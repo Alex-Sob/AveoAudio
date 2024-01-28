@@ -41,8 +41,7 @@ namespace AveoAudio.ViewModels
             this.mediaPlayer = mediaPlayer;
             this.settings = settings;
 
-            var imagesPath = !string.IsNullOrEmpty(settings.ImagesPath) ? settings.ImagesPath : ImageManager.DefaultPath;
-            this.imageManager = new ImageManager(imagesPath);
+            this.imageManager = new ImageManager();
 
             var trackManager = new TrackManager(this.settings);
             this.playlistBuilder = new PlaylistBuilder(this.settings, this.appState, trackManager);
@@ -221,15 +220,15 @@ namespace AveoAudio.ViewModels
 
             var timeOfDay = this.Selectors.SelectedTimeOfDay ?? "";
             var weather = this.Selectors.SelectedWeather ?? "";
-            var nextImagePath = this.imageManager.GetNextImage(timeOfDay, weather);
-            this.Image = new BitmapImage(new Uri(nextImagePath));
+            var imagePath = await this.imageManager.GetNextImage(timeOfDay, weather);
+            this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
 
             this.SelectedPane = (int)Pane.NowPlaying;
         }
 
-        private void Initialize()
+        private async void Initialize()
         {
-            var imagePath = this.imageManager.GetNextDefaultImage();
+            var imagePath = await this.imageManager.GetNextDefaultImage();
             this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
         }
 

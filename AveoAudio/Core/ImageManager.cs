@@ -1,62 +1,76 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading.Tasks;
 using Windows.Storage;
 
 namespace AveoAudio
 {
     public class ImageManager
     {
-        public static readonly string DefaultPath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "Images");
-
         private const string DefaultFolder = "Default";
 
-        private readonly string basePath;
-        private readonly Dictionary<string, (int, IList<string>)> imagesByFolder;
+        private readonly Dictionary<string, (int, IList<StorageFile>)> imagesByFolder;
 
-        public ImageManager(string basePath)
+        public ImageManager()
         {
-            this.basePath = basePath;
-            this.imagesByFolder = new Dictionary<string, (int, IList<string>)>();
+            this.imagesByFolder = new();
         }
 
-        public string GetNextDefaultImage()
+        public async Task<string> GetNextDefaultImage()
         {
             // TODO: Copy default images first time if there are none
-            return this.GetNextImage(Path.Combine(this.basePath, DefaultFolder));
+            var folder = await KnownFolders.PicturesLibrary.TryGetItemAsync(DefaultFolder) as StorageFolder;
+            if (folder == null) return null;
+
+            return await this.GetNextImage(folder);
         }
 
-        public string GetNextImage(string timeOfDay, string weather)
+        public async Task<string> GetNextImage(string timeOfDay, string weather)
         {
-            var folder = Path.Combine(this.basePath, timeOfDay, weather);
-            var nextImage = this.GetNextImage(folder);
-            if (nextImage != null) return nextImage;
+            var folder = await GetFolder(timeOfDay, weather);
 
-            folder = Path.Combine(this.basePath, timeOfDay);
-            nextImage = this.GetNextImage(folder);
-            if (nextImage != null) return nextImage;
-
-            return this.GetNextDefaultImage();
-        }
-
-        private string GetNextImage(string path)
-        {
-            if (this.imagesByFolder.TryGetValue(path, out (int current, IList<string> images) item))
+            if (folder != null)
             {
-                var current = item.current < item.images.Count - 1 ? item.current + 1 : 0;
-                this.imagesByFolder[path] = (current, item.images);
-                return item.images[current];
+                var nextImage = await this.GetNextImage(folder);
+                if (nextImage != null) return nextImage;
+            }
+
+            return await this.GetNextDefaultImage();
+        }
+
+        private static async Task<StorageFolder> GetFolder(string timeOfDay, string weather)
+        {
+            if (string.IsNullOrEmpty(timeOfDay)) return null;
+
+            var folder = await KnownFolders.PicturesLibrary.TryGetItemAsync(timeOfDay) as StorageFolder;
+            
+            if (folder == null) return null;
+            if (string.IsNullOrEmpty(weather)) return folder;
+
+            folder = await folder.TryGetItemAsync(weather) as StorageFolder;
+            if (folder != null) return folder;
+
+            return folder;
+        }
+
+        private async Task<string> GetNextImage(StorageFolder folder)
+        {
+            if (this.imagesByFolder.TryGetValue(folder.Path, out (int current, IList<StorageFile> images) pair))
+            {
+                var current = pair.current < pair.images.Count - 1 ? pair.current + 1 : 0;
+                this.imagesByFolder[folder.Path] = (current, pair.images);
+                return pair.images[current].Path;
             }
             else
             {
-                var images = Directory.Exists(path) ? Directory.EnumerateFiles(path) : Enumerable.Empty<string>();
+                var images = await folder.GetFilesAsync();
                 var randomizedImages = images.Randomize().ToList();
 
                 if (randomizedImages.Any())
                 {
-                    this.imagesByFolder[path] = (0, randomizedImages);
-                    return randomizedImages[0];
+                    this.imagesByFolder[folder.Path] = (0, randomizedImages);
+                    return randomizedImages[0].Path;
                 }
             }
 

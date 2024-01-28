@@ -4,8 +4,6 @@ namespace AveoAudio
 {
     public class AppSettings
     {
-        public string ImagesPath { get; set; }
-
         public int PlaylistSize { get; set; }
 
         public int OlderTracksQuota { get; set; }
