@@ -125,6 +125,9 @@
 
     <Grid Background="{Binding Background, ElementName=view}">
         <Pivot x:Name="pivot" Margin="50 30">
+            <Pivot.RightHeader>
+                <Button Background="Transparent" FontFamily="Segoe MDL2 Assets" FontSize="20" Click="{x:Bind ViewModel.Configure}">&#xE713;</Button>
+            </Pivot.RightHeader>
             <PivotItem Header="Genres">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{x:Bind ViewModel.Genres, Mode=OneWay}" Margin="0 20 0 0">

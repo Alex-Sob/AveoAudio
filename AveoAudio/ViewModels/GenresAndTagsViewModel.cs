@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 using Windows.Storage;
@@ -39,6 +40,8 @@ namespace AveoAudio.ViewModels
         public ICommand ToggleFilterTagCommand { get; private set; }
 
         public ICommand ToggleGenreCommand { get; private set; }
+
+        public Task Configure() => SettingsManager.OpenLocalSettings();
 
         private static void Refresh<T>(ICollection<T> collection, IEnumerable<T> values)
         {

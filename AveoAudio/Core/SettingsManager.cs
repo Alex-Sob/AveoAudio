@@ -4,6 +4,7 @@ using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 
 using Windows.Storage;
+using Windows.System;
 
 namespace AveoAudio
 {
@@ -14,6 +15,12 @@ namespace AveoAudio
         public static Task<AppSettings> GetSettingsAsync()
         {
             return GetData<AppSettings>(FileName);
+        }
+
+        public static async Task OpenLocalSettings()
+        {
+            var file = await ApplicationData.Current.LocalFolder.GetFileAsync(FileName);
+            await Launcher.LaunchFileAsync(file);
         }
 
         private static async Task<StorageFile> EnsureFileAsync(string name)
