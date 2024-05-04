@@ -10,6 +10,20 @@
     <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!-- Added by VS while creating app packages -->
+  <PropertyGroup>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <AppxBundle>Never</AppxBundle>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+    <PackageCertificateKeyFile>AveoAudio_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

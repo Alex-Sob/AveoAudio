@@ -8,8 +8,8 @@
 
   <Identity
     Name="1dc2280c-d811-4f32-976f-f1e30e1c417f"
-    Publisher="CN=Administrator"
-    Version="1.0.0.0" />
+    Publisher="CN=v-asobolev"
+    Version="1.0.1.0" />
 
   <Properties>
     <DisplayName>AveoAudio</DisplayName>
