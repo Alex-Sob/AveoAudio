@@ -25,12 +25,12 @@ namespace AveoAudio
         
         public static (DateTime dateCreated, string rawTags) ExtractCustomProperties(StorageFile file, MusicProperties props)
         {
-            if (props.Subtitle.Length < 10) return (file.DateCreated.Date, rawTags: null);
+            if (props.Subtitle.Length < 10) return (file.DateCreated.Date, rawTags: "");
 
             var hasDate = DateTime.TryParseExact(props.Subtitle.AsSpan(0, 10), "dd.MM.yyyy", null, DateTimeStyles.None, out var dateCreated);
             dateCreated = hasDate ? dateCreated : file.DateCreated.Date;
 
-            var rawTags = props.Subtitle[10] == ';' ? props.Subtitle.Substring(11) : null;
+            var rawTags = props.Subtitle[10] == ';' ? props.Subtitle[11..] : "";
 
             return (dateCreated, rawTags);
         }
@@ -39,33 +39,23 @@ namespace AveoAudio
         {
             var timesOfDay = default(TimesOfDay);
             var customTags = new BitVector32();
-            Weather weather = Weather.None;
+            var weather = Weather.None;
 
-            if (!string.IsNullOrEmpty(rawTags))
+            track.Tags = new TagList(rawTags);
+
+            foreach (var tag in track.Tags)
             {
-                int current = 0;
-
-                while (current <= rawTags.Length)
+                if (Enum.TryParse<TimesOfDay>(tag, out var timesOfDayValue))
                 {
-                    var index = rawTags.IndexOf(',', current);
-                    var length = index >= 0 ? index - current : rawTags.Length - current;
-                    var tag = rawTags.AsSpan(current, length);
-
-                    if (Enum.TryParse<TimesOfDay>(tag, out var timesOfDayValue))
-                    {
-                        timesOfDay |= timesOfDayValue;
-                    }
-                    else if (TryGetValue(customTagsMap, tag, out var customTagIndex))
-                    {
-                        customTags[1 << customTagIndex] = true;
-                    }
-                    else if (weather == Weather.None) Enum.TryParse(tag, out weather);
-
-                    current += length + 1;
+                    timesOfDay |= timesOfDayValue;
                 }
+                else if (TryGetValue(customTagsMap, tag, out var customTagIndex))
+                {
+                    customTags[1 << customTagIndex] = true;
+                }
+                else if (weather == Weather.None) Enum.TryParse(tag, out weather);
             }
 
-            track.RawTags = rawTags;
             track.TimesOfDay = timesOfDay;
             track.CustomTags = customTags;
             track.Weather = weather;

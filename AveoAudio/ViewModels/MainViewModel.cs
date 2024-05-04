@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Windows.ApplicationModel.Core;
 using Windows.Media.Core;
 using Windows.Media.Playback;
-using Windows.UI.Core;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Dispatching;
@@ -52,6 +50,7 @@ namespace AveoAudio.ViewModels
             this.Tracklist = new TracklistViewModel(this, trackManager);
 
             this.mediaPlayer.PlaybackSession.PositionChanged += this.OnPositionChanged;
+            this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
 
             this.Initialize();
         }
@@ -78,7 +77,31 @@ namespace AveoAudio.ViewModels
             set
             {
                 if (this.SetProperty(ref this.currentTrack, value))
+                {
                     this.OnPropertyChanged(nameof(this.HasCurrentTrack));
+                    this.OnPropertyChanged(nameof(this.DisplayTags));
+                }
+            }
+        }
+
+        public string DisplayTags
+        {
+            get
+            {
+                if (!this.HasCurrentTrack) return null;
+
+                int current = 0;
+                Span<char> span = stackalloc char[this.currentTrack.Tags.Length + 1];
+
+                foreach (var tag in this.currentTrack.Tags)
+                {
+                    if (Enum.TryParse<TimesOfDay>(tag, out var timesOfDay)) continue;
+                    tag.CopyTo(span.Slice(current, tag.Length));
+                    current += tag.Length;
+                    span[current++] = ' ';
+                }
+
+                return span[..current].ToString();
             }
         }
 
@@ -93,6 +116,10 @@ namespace AveoAudio.ViewModels
         }
 
         public bool IsBusy => this.BusyText != null;
+
+        public bool IsPlaying => this.mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
+
+        public bool IsPaused => !this.IsPlaying;
 
         public MediaPlaybackList Playlist
         {
@@ -232,6 +259,15 @@ namespace AveoAudio.ViewModels
             this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
         }
 
+        private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
+        {
+            this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            {
+                this.OnPropertyChanged(nameof(this.IsPlaying));
+                this.OnPropertyChanged(nameof(this.IsPaused));
+            });
+        }
+
         private void OnPositionChanged(MediaPlaybackSession sender, object args)
         {
             if (this.CurrentTrackIndex < 0) return;
@@ -242,7 +278,7 @@ namespace AveoAudio.ViewModels
             if (!trackViewModel.Played && session.Position.TotalSeconds > session.NaturalDuration.TotalSeconds / 2)
             {
                 trackViewModel.Played = true;
-                StateManager.SetLastPlayed(this.currentTrack);
+                StateManager.SetLastPlayedOn(this.currentTrack);
             }
         }
 

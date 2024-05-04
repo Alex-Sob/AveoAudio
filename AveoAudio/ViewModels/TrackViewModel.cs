@@ -10,10 +10,10 @@ namespace AveoAudio.ViewModels
         public TrackViewModel(Track track)
         {
             this.Track = track;
-            this.Value = track.RawTags;
+            this.Value = track.Tags;
         }
 
-        public bool HasChanges => this.Value != this.Track.RawTags;
+        public bool HasChanges => this.Value != this.Track.Tags;
 
         public bool IsSelected
         {

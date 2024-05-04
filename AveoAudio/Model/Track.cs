@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 
@@ -19,9 +20,11 @@ namespace AveoAudio
 
         public string Genre { get; internal set; }
 
+        public DateTime? LastPlayedOn => StateManager.GetLastPlayedOn(this);
+
         public MusicProperties Properties { get; internal set; }
 
-        public string RawTags { get; internal set; }
+        public TagList Tags { get; internal set; }
 
         public TimesOfDay TimesOfDay { get; internal set; }
 

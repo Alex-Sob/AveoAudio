@@ -38,5 +38,7 @@ namespace AveoAudio
             else if (y > -Math.Abs(x))
                 this.ViewModel.RewindToStart();
         }
+
+        private void TrackBoxTapped_Tapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;
     }
 }
