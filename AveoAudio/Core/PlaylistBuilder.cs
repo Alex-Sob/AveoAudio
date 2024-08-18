@@ -21,7 +21,7 @@ namespace AveoAudio
 
         public async Task<IList<Track>> BuildPlaylistAsync(PlaylistProfile profile)
         {
-            var tracks = await SelectTracksAsync(profile);
+            var tracks = await SelectTracksAsync(profile).ConfigureAwait(false);
             this.playlist = this.playlist ?? new List<Track>(this.settings.PlaylistSize);
 
             this.playlist.Clear();
@@ -45,7 +45,7 @@ namespace AveoAudio
 
         private async Task<IEnumerable<Track>> SelectTracksAsync(PlaylistProfile profile)
         {
-            var tracks = await this.trackManager.GetTracksAsync(profile.Genres);
+            var tracks = await this.trackManager.GetTracksAsync(profile.Genres).ConfigureAwait(false);
 
             var filterTags = profile.FilterTags;
             var excludeTags = profile.ExcludeTags;

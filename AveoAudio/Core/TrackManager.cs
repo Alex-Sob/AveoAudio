@@ -10,8 +10,10 @@ namespace AveoAudio
 {
     public class TrackManager
     {
+        private static readonly QueryOptions QueryOptions = new() { FolderDepth = FolderDepth.Deep, FileTypeFilter = { ".mp3" } };
+
         private readonly TrackDataParser trackDataParser;
-        private readonly Dictionary<string, IList<Track>> tracksByGenre = new Dictionary<string, IList<Track>>();
+        private readonly Dictionary<string, IList<Track>> tracksByGenre = new();
 
         public TrackManager(AppSettings settings)
         {
@@ -20,13 +22,14 @@ namespace AveoAudio
 
         public async Task<IEnumerable<Track>> GetTracksAsync(IEnumerable<string> genres)
         {
-            var tasks =
-                from genre in genres
-                join pair in this.tracksByGenre on genre equals pair.Key into g
-                from pair in g.DefaultIfEmpty()
-                select pair.Value != null ? Task.FromResult(pair.Value) : LoadTracksAsync(genre);
+            var folders = await KnownFolders.MusicLibrary.GetFoldersAsync().AsTask().ConfigureAwait(false);
 
-            var trackLists = await Task.WhenAll(tasks);
+            var tasks =
+                from folder in folders
+                join genre in genres on folder.Name equals genre
+                select this.tracksByGenre.TryGetValue(genre, out var tracks) ? Task.FromResult(tracks) : LoadTracksAsync(genre, folder);
+
+            var trackLists = await Task.WhenAll(tasks).ConfigureAwait(false);
 
             var tracks =
                 from trackList in trackLists
@@ -39,37 +42,33 @@ namespace AveoAudio
         public async Task UpdateTags(Track track, string rawTags)
         {
             track.Properties.Subtitle = $"{track.DateCreated:dd.MM.yyyy};{rawTags}";
-            await track.Properties.SavePropertiesAsync();
+            await track.Properties.SavePropertiesAsync().AsTask().ConfigureAwait(false);
             this.trackDataParser.ParseTags(track, rawTags);
         }
 
-        private async Task<Track> LoadTrackAsync(string genre, StorageFile file)
+        private async Task LoadTrackAsync(Track track)
         {
-            var props = await file.Properties.GetMusicPropertiesAsync();
-            var (dateCreated, rawTags) = TrackDataParser.ExtractCustomProperties(file, props);
+            var props = await track.File.Properties.GetMusicPropertiesAsync().AsTask().ConfigureAwait(false);
+            var (dateCreated, rawTags) = TrackDataParser.ExtractCustomProperties(track.File, props);
 
-            var track = new Track
+            track.Properties = props;
+            track.DateCreated = dateCreated;
+
+            this.trackDataParser.ParseTags(track, rawTags);
+        }
+
+        private async Task<IList<Track>> LoadTracksAsync(string genre, StorageFolder folder)
+        {
+            var files = await folder.CreateFileQueryWithOptions(QueryOptions).GetFilesAsync().AsTask().ConfigureAwait(false);
+
+            var tracks = new List<Track>(files.Count);
+
+            foreach (var file in files)
             {
-                File = file,
-                Genre = genre,
-                Properties = props,
-                DateCreated = dateCreated,
-            };
+                tracks.Add(new Track { Genre = genre, File = file });
+            }
 
-            this.trackDataParser.ParseTags(track, rawTags);
-            return track;
-        }
-
-        private async Task<IList<Track>> LoadTracksAsync(string genre)
-        {
-            var queryOptions = new QueryOptions { FolderDepth = FolderDepth.Deep, FileTypeFilter = { ".mp3" } };
-
-            var folder = await KnownFolders.MusicLibrary.GetFolderAsync(genre);
-            var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
-
-            var tracks = await Task.WhenAll(
-                from file in files
-                select this.LoadTrackAsync(genre, file));
+            await Task.WhenAll(tracks.Select(LoadTrackAsync)).ConfigureAwait(false);
 
             this.tracksByGenre[genre] = tracks;
             return tracks;
