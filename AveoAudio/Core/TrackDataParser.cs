@@ -45,9 +45,9 @@ namespace AveoAudio
 
             foreach (var tag in track.Tags)
             {
-                if (Enum.TryParse<TimesOfDay>(tag, out var timesOfDayValue))
+                if (Enum.TryParse<TimesOfDay>(tag.EndsWith("!") ? tag[..^1] : tag, out var timeOfDay))
                 {
-                    timesOfDay |= timesOfDayValue;
+                    timesOfDay |= timeOfDay;
                 }
                 else if (TryGetValue(customTagsMap, tag, out var customTagIndex))
                 {
@@ -55,6 +55,9 @@ namespace AveoAudio
                 }
                 else if (weather == Weather.None) Enum.TryParse(tag, out weather);
             }
+
+            if (weather == Weather.Sun && timesOfDay == TimesOfDay.None)
+                timesOfDay = TimesOfDay.Daytime & ~TimesOfDay.Sunset;
 
             track.TimesOfDay = timesOfDay;
             track.CustomTags = customTags;

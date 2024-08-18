@@ -57,7 +57,7 @@ namespace AveoAudio
 
             return from track in tracks
                    where track.TimesOfDay == TimesOfDay.None || track.TimesOfDay.HasFlag(timeOfDay)
-                   where this.appState.Weather == null || track.Weather == Weather.None || track.Weather == this.appState.Weather
+                   where track.Weather == Weather.None || track.Weather == this.appState.Weather
                    where excludeTags.Count == 0 || (excludeMask & track.CustomTags.Data) == 0
                    where filterTags.Count == 0 || (filterMask & track.CustomTags.Data) == filterMask
                    select track;
