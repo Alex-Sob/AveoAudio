@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Globalization;
+using Microsoft.UI.Xaml.Data;
 
 namespace AveoAudio.Views
 {
-    public class DateFormatter : IFormatProvider, ICustomFormatter
+    public class DateConverter : IValueConverter
     {
-        public string Format(string format, object arg, IFormatProvider formatProvider)
+        public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (arg is DateTime date) return format == "relative" ? Format(date) : date.ToString(format);
+            if (value is not DateTime date) return value;
 
-            if (arg is IFormattable formattable)
-                return formattable.ToString(format, CultureInfo.CurrentCulture);
-            else
-                return arg?.ToString();
+            var format = parameter as string;
+            return format == "relative" ? Format(date) : date.ToString(format);
         }
 
-        public object GetFormat(Type formatType)
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
-            return formatType == typeof(ICustomFormatter) ? this : null;
+            throw new NotImplementedException();
         }
 
         private static string Format(DateTime date)

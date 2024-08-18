@@ -17,7 +17,7 @@
         <SolidColorBrush x:Key="TrackActionButtonBrush" Color="#FFEBEBEB" />
         <SolidColorBrush x:Key="TrackActionButtonActiveBrush" Color="White" />
         <SolidColorBrush x:Key="ViewSelectorButtonActiveBrush" Color="Black" />
-        <views:StringFormatConverter x:Key="StringFormatConverter" />
+        <views:DateConverter x:Key="DateConverter" />
 
         <Style x:Key="ScrollButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
@@ -278,7 +278,7 @@
                         
                         <TextBlock Grid.Row="1" Grid.Column="1" Foreground="{StaticResource ForegroundBrush}" VerticalAlignment="Center" Visibility="{Binding IsSelected}">
                             <Run Text="{Binding Track.Genre, Mode=OneTime}" />
-                            <Run Text="{Binding Track.DateCreated, Mode=OneTime, Converter={StaticResource StringFormatConverter}, ConverterParameter=[\{0:dd.MM.yyyy\}]}" />
+                            <Run Text="{Binding Track.DateCreated, Mode=OneTime, Converter={StaticResource DateConverter}, ConverterParameter=dd.MM.yyyy}" />
                         </TextBlock>
                     </Grid>
                 </DataTemplate>
