@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+
 using Windows.System;
 
 namespace AveoAudio.ViewModels
@@ -11,15 +12,14 @@ namespace AveoAudio.ViewModels
     public class TracklistViewModel : NotificationBase
     {
         private readonly MainViewModel mainViewModel;
-        private readonly TrackManager trackManager;
 
         private TrackViewModel selectedTrack;
         private bool showAll = true;
 
-        public TracklistViewModel(MainViewModel mainViewModel, TrackManager trackManager)
+        public TracklistViewModel(MainViewModel mainViewModel)
         {
             this.mainViewModel = mainViewModel;
-            this.trackManager = trackManager;
+
             this.PlayTrackCommand = new DelegateCommand(this.PlayTrack);
             this.SwitchViewCommand = new DelegateCommand<string>(this.SwitchView);
         }
@@ -71,7 +71,7 @@ namespace AveoAudio.ViewModels
             var tasks =
                 from editor in this.Tracks
                 where editor.HasChanges
-                select this.trackManager.UpdateTags(editor.Track, editor.Value);
+                select editor.Track.UpdateTags(editor.Value);
 
             this.mainViewModel.GetBusy(Task.WhenAll(tasks), "Saving");
         }

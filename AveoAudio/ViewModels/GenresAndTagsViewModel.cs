@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -19,9 +20,9 @@ namespace AveoAudio.ViewModels
             this.appState = appState;
             this.settings = settings;
 
-            this.ToggleExcludeTagCommand = new DelegateCommand<string>(g => this.ToggleValue(this.PlaylistProfile.ExcludeTags, g));
-            this.ToggleFilterTagCommand = new DelegateCommand<string>(t => this.ToggleValue(this.PlaylistProfile.FilterTags, t));
-            this.ToggleGenreCommand = new DelegateCommand<string>(t => this.ToggleValue(this.PlaylistProfile.Genres, t));
+            this.ToggleExcludeTagCommand = new DelegateCommand<string>(g => this.ToggleValue(this.ExcludingTags, g));
+            this.ToggleFilterTagCommand = new DelegateCommand<string>(t => this.ToggleValue(this.FilterTags, t));
+            this.ToggleGenreCommand = new DelegateCommand<string>(t => this.ToggleValue(this.SelectedGenres, t));
 
             this.appState.PropertyChanged += this.OnAppStateChanged;
 
@@ -29,9 +30,13 @@ namespace AveoAudio.ViewModels
             this.InitializeTags();
         }
 
+        public ISet<string> ExcludingTags { get; } = new HashSet<string>();
+
+        public ISet<string> FilterTags { get; } = new HashSet<string>();
+
         public IList<string> Genres { get; private set; }
 
-        public PlaylistProfile PlaylistProfile { get; private set; } = new PlaylistProfile();
+        public ISet<string> SelectedGenres { get; } = new HashSet<string>();
 
         public IList<TagListItem> Tags { get; private set; }
 
@@ -55,13 +60,14 @@ namespace AveoAudio.ViewModels
 
             var genres =
                 from folder in folders
+                where Directory.EnumerateFiles(folder.Path, "*.mp3").Any()
                 let genre = folder.Name
                 orderby genre
                 select genre;
 
             this.Genres = new List<string>(folders.Count);
             this.Genres.AddRange(genres);
-            this.PlaylistProfile.Genres.AddRange(this.Genres);
+            this.SelectedGenres.AddRange(this.Genres);
 
             this.OnPropertyChanged(nameof(this.Genres));
         }
@@ -71,13 +77,13 @@ namespace AveoAudio.ViewModels
             this.RefreshDefaultTags();
 
             var tags =
-                from tag in this.settings.Tags ?? new string[0]
+                from tag in this.settings.Tags ?? []
                 orderby tag
                 select new TagListItem
                 {
                     Tag = tag,
-                    Filter = this.PlaylistProfile.FilterTags.Contains(tag),
-                    Exclude = this.PlaylistProfile.ExcludeTags.Contains(tag)
+                    Filter = this.FilterTags.Contains(tag),
+                    Exclude = this.ExcludingTags.Contains(tag)
                 };
 
             this.Tags = tags.ToList();
@@ -91,8 +97,8 @@ namespace AveoAudio.ViewModels
 
                 foreach (var item in this.Tags)
                 {
-                    item.Filter = this.PlaylistProfile.FilterTags.Contains(item.Tag);
-                    item.Exclude = this.PlaylistProfile.ExcludeTags.Contains(item.Tag);
+                    item.Filter = this.FilterTags.Contains(item.Tag);
+                    item.Exclude = this.ExcludingTags.Contains(item.Tag);
                 }
             }
         }
@@ -101,8 +107,8 @@ namespace AveoAudio.ViewModels
         {
             if (this.settings.Selectors == null) return;
 
-            this.PlaylistProfile.FilterTags.Clear();
-            this.PlaylistProfile.ExcludeTags.Clear();
+            this.FilterTags.Clear();
+            this.ExcludingTags.Clear();
 
             RefreshDefaultTags(this.appState.TimeOfDay);
             RefreshDefaultTags(this.appState.Weather);
@@ -115,8 +121,8 @@ namespace AveoAudio.ViewModels
             var filterTags = selector?.DefaultFilterTags ?? Enumerable.Empty<string>();
             var excludeTags = selector?.DefaultExcludeTags ?? Enumerable.Empty<string>();
 
-            this.PlaylistProfile.FilterTags.AddRange(filterTags);
-            this.PlaylistProfile.ExcludeTags.AddRange(excludeTags);
+            this.FilterTags.AddRange(filterTags);
+            this.ExcludingTags.AddRange(excludeTags);
         }
 
         private void ToggleValue(ISet<string> set, string value)

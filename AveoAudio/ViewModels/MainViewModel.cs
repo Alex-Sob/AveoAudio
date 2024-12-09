@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Windows.Media.Core;
-using Windows.Media.Playback;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Dispatching;
+
+using Windows.Media.Core;
+using Windows.Media.Playback;
 
 namespace AveoAudio.ViewModels
 {
@@ -24,15 +25,15 @@ namespace AveoAudio.ViewModels
         private readonly DispatcherQueue dispatcherQueue;
         private readonly ImageManager imageManager;
         private readonly MediaPlayer mediaPlayer;
-        private readonly PlaylistBuilder playlistBuilder;
+        private readonly MusicLibrary musicLibrary;
         private readonly AppSettings settings;
+        private readonly IList<Track> playlist = [];
 
         private string busyText;
         private Track currentTrack;
         private ImageSource imageSource;
-        private MediaPlaybackList playlist;
+        private MediaPlaybackList playbackList;
         private int selectedPane;
-        private IList<Track> tracks;
 
         public MainViewModel(AppSettings settings, MediaPlayer mediaPlayer, DispatcherQueue dispatcherQueue)
         {
@@ -41,13 +42,12 @@ namespace AveoAudio.ViewModels
 
             this.imageManager = new ImageManager();
 
-            var trackManager = new TrackManager(this.settings);
-            this.playlistBuilder = new PlaylistBuilder(this.settings, this.appState, trackManager);
+            this.musicLibrary = new MusicLibrary();
             this.dispatcherQueue = dispatcherQueue;
 
             this.Selectors = new SelectorsViewModel(this.appState);
             this.GenresAndTags = new GenresAndTagsViewModel(this.appState, this.settings);
-            this.Tracklist = new TracklistViewModel(this, trackManager);
+            this.Tracklist = new TracklistViewModel(this);
 
             this.mediaPlayer.PlaybackSession.PositionChanged += this.OnPositionChanged;
             this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
@@ -123,8 +123,8 @@ namespace AveoAudio.ViewModels
 
         public MediaPlaybackList Playlist
         {
-            get => this.playlist;
-            set => SetProperty(ref this.playlist, value);
+            get => this.playbackList;
+            set => SetProperty(ref this.playbackList, value);
         }
 
         public int SelectedPane
@@ -145,7 +145,7 @@ namespace AveoAudio.ViewModels
 
         public TracklistViewModel Tracklist { get; private set; }
 
-        private int CurrentTrackIndex => (int)this.playlist.CurrentItemIndex;
+        private int CurrentTrackIndex => (int)this.playbackList.CurrentItemIndex;
 
         public void BuildPlaylist()
         {
@@ -176,14 +176,14 @@ namespace AveoAudio.ViewModels
 
         public void MoveNext()
         {
-            if (this.playlist != null && this.CurrentTrackIndex < this.tracks.Count - 1)
-                this.playlist.MoveNext();
+            if (this.playbackList != null && this.CurrentTrackIndex < this.playlist.Count - 1)
+                this.playbackList.MoveNext();
         }
 
         public void MovePrevious()
         {
-            if (this.playlist != null && this.CurrentTrackIndex > 0)
-                this.playlist.MovePrevious();
+            if (this.playbackList != null && this.CurrentTrackIndex > 0)
+                this.playbackList.MovePrevious();
         }
 
         public void OpenTilesPane()
@@ -193,7 +193,7 @@ namespace AveoAudio.ViewModels
 
         public void Play(int index)
         {
-            this.playlist.MoveTo((uint)index);
+            this.playbackList.MoveTo((uint)index);
             this.SelectedPane = (int)Pane.NowPlaying;
             this.mediaPlayer.Play();
         }
@@ -213,7 +213,7 @@ namespace AveoAudio.ViewModels
                 this.mediaPlayer.Play();
         }
 
-        private static void AddTracks(MediaPlaybackList playlist, IEnumerable<Track> tracks)
+        private static void LoadPlaylist(MediaPlaybackList playlist, IEnumerable<Track> tracks)
         {
             foreach (var track in tracks)
             {
@@ -234,14 +234,20 @@ namespace AveoAudio.ViewModels
             this.mediaPlayer.Pause();
             this.Tracklist.Tracks.Clear();
 
-            if (this.playlist != null) this.playlist.CurrentItemChanged -= this.OnTrackChanged;
+            if (this.playbackList != null) this.playbackList.CurrentItemChanged -= this.OnTrackChanged;
             this.Playlist = null;
+            
+            var tracks = await this.musicLibrary.LoadTracksAsync(this.GenresAndTags.SelectedGenres);
 
-            var playlistProfile = this.GenresAndTags.PlaylistProfile;
-            this.tracks = await this.playlistBuilder.BuildPlaylistAsync(playlistProfile);
+            new PlaylistBuilder(tracks, this.settings)
+                .WithTimeOfDay(this.appState.TimeOfDay)
+                .WithWeather(this.appState.Weather)
+                .ExcludeTags(this.GenresAndTags.ExcludingTags)
+                .FilterByTags(this.GenresAndTags.FilterTags)
+                .BuildPlaylist(this.playlist);
 
             var playlist = new MediaPlaybackList();
-            AddTracks(playlist, this.tracks);
+            LoadPlaylist(playlist, this.playlist);
             this.Playlist = playlist.Items.Any() ? playlist : null;
             playlist.CurrentItemChanged += this.OnTrackChanged;
 
@@ -285,9 +291,9 @@ namespace AveoAudio.ViewModels
         private void OnTrackChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
             var index = this.CurrentTrackIndex;
-            if (index < 0 || index >= this.tracks.Count) return;
+            if (index < 0 || index >= this.playlist.Count) return;
 
-            var track = this.tracks[index];
+            var track = this.playlist[index];
             this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => this.CurrentTrack = track);
 
             if (index == this.Tracklist.Tracks.Count)

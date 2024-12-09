@@ -1,66 +1,63 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace AveoAudio
 {
-    public class PlaylistBuilder
+    public class PlaylistBuilder(IEnumerable<Track> source, AppSettings settings)
     {
-        private readonly AppSettings settings;
-        private readonly AppState appState;
-        private readonly TrackManager trackManager;
+        private readonly AppSettings settings = settings;
+        private IEnumerable<Track> query = source;
 
-        private List<Track> playlist;
-
-        public PlaylistBuilder(AppSettings settings, AppState appState, TrackManager trackManager)
+        public void BuildPlaylist(IList<Track> playlist)
         {
-            this.settings = settings;
-            this.appState = appState;
-            this.trackManager = trackManager;
+            var tracks = this.query.Randomize().Take(this.settings.PlaylistSize);
+
+            playlist.Clear();
+            playlist.AddRange(tracks);
         }
 
-        public async Task<IList<Track>> BuildPlaylistAsync(PlaylistProfile profile)
+        public PlaylistBuilder ExcludeTags(ISet<string> tags)
         {
-            var tracks = await SelectTracksAsync(profile).ConfigureAwait(false);
-            this.playlist = this.playlist ?? new List<Track>(this.settings.PlaylistSize);
+            if (tags.Count == 0) return this;
 
-            this.playlist.Clear();
-            playlist.AddRange(tracks.Randomize().Take(this.settings.PlaylistSize));
-
-            return playlist;
+            var mask = CreateMask(tags);
+            this.query = this.query.Where(track => (mask & track.CustomTags.Data) == 0);
+            return this;
         }
 
-        private int CreateMask(ISet<string> filterTags)
+        public PlaylistBuilder FilterByTags(ISet<string> tags)
+        {
+            if (tags.Count == 0) return this;
+
+            var mask = CreateMask(tags);
+            this.query = this.query.Where(track => (mask & track.CustomTags.Data) == mask);
+            return this;
+        }
+
+        public PlaylistBuilder WithTimeOfDay(TimesOfDay? timeOfDay)
+        {
+            timeOfDay ??= TimesOfDay.None;
+            this.query = this.query.Where(track => track.TimesOfDay == TimesOfDay.None || track.TimesOfDay.HasFlag(timeOfDay));
+            return this;
+        }
+
+        public PlaylistBuilder WithWeather(Weather? weather)
+        {
+            this.query = this.query.Where(track => track.Weather == Weather.None || track.Weather == weather);
+            return this;
+        }
+
+        private int CreateMask(ISet<string> tags)
         {
             int bitMask = 1, result = 0;
 
             for (int i = 0; i < this.settings.Tags.Count; i++)
             {
-                result |= filterTags.Contains(this.settings.Tags[i]) ? bitMask : 0;
+                result |= tags.Contains(this.settings.Tags[i]) ? bitMask : 0;
                 bitMask <<= 1;
             }
 
             return result;
-        }
-
-        private async Task<IEnumerable<Track>> SelectTracksAsync(PlaylistProfile profile)
-        {
-            var tracks = await this.trackManager.GetTracksAsync(profile.Genres).ConfigureAwait(false);
-
-            var filterTags = profile.FilterTags;
-            var excludeTags = profile.ExcludeTags;
-
-            var filterMask = CreateMask(filterTags);
-            var excludeMask = CreateMask(excludeTags);
-
-            var timeOfDay = this.appState.TimeOfDay ?? TimesOfDay.None;
-
-            return from track in tracks
-                   where track.TimesOfDay == TimesOfDay.None || track.TimesOfDay.HasFlag(timeOfDay)
-                   where track.Weather == Weather.None || track.Weather == this.appState.Weather
-                   where excludeTags.Count == 0 || (excludeMask & track.CustomTags.Data) == 0
-                   where filterTags.Count == 0 || (filterMask & track.CustomTags.Data) == filterMask
-                   select track;
         }
     }
 }

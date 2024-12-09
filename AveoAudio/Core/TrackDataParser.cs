@@ -2,19 +2,19 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
+
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 
 namespace AveoAudio
 {
-    public class TrackDataParser
+    internal class TrackDataParser
     {
-        private readonly AppSettings settings;
+        // TODO: Use AlternateLookup from .NET 9
         private readonly IDictionary<ReadOnlyMemory<char>, int> customTagsMap;
 
         public TrackDataParser(AppSettings appSettings)
         {
-            this.settings = appSettings;
             this.customTagsMap = new Dictionary<ReadOnlyMemory<char>, int>(appSettings.Tags.Count);
 
             for (int i = 0; i < appSettings.Tags.Count; i++)
@@ -43,6 +43,7 @@ namespace AveoAudio
 
             track.Tags = new TagList(rawTags);
 
+            // TODO: Handle "not"
             foreach (var tag in track.Tags)
             {
                 if (Enum.TryParse<TimesOfDay>(tag.EndsWith("!") ? tag[..^1] : tag, out var timeOfDay))
