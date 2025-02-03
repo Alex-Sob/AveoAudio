@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AveoAudio
@@ -31,6 +32,32 @@ namespace AveoAudio
 
             var mask = CreateMask(tags);
             this.query = this.query.Where(track => (mask & track.CustomTags.Data) == mask);
+            return this;
+        }
+
+        public PlaylistBuilder WithOutOfRotationTimeSinceAdded(int days)
+        {
+            if (days > 0)
+            {
+                var startingDate = DateTime.Today.AddDays(-days);
+                this.query = this.query.Where(track => track.DateAdded < startingDate);
+            }
+
+            return this;
+        }
+
+        public PlaylistBuilder WithOutOfRotationTimeSincePlayed(int days)
+        {
+            if (days >= 0)
+            {
+                var startingDate = DateTime.Today.AddDays(-days);
+                this.query = this.query.Where(track => !track.LastPlayedOn.HasValue || track.LastPlayedOn < startingDate);
+            }
+            else
+            {
+                this.query = this.query.Where(track => !track.LastPlayedOn.HasValue);
+            }
+
             return this;
         }
 

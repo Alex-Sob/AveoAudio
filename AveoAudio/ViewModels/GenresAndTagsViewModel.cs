@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
+using Microsoft.UI.Xaml;
+
 using Windows.Storage;
 
 namespace AveoAudio.ViewModels
@@ -36,6 +38,18 @@ namespace AveoAudio.ViewModels
 
         public IList<string> Genres { get; private set; }
 
+        public string OutOfRotationDaysSinceAdded
+        {
+            get => this.UserSettings.OutOfRotationDaysSinceAdded.ToString();
+            set => this.UserSettings.OutOfRotationDaysSinceAdded = Convert.ToInt32(value);
+        }
+
+        public string OutOfRotationDaysSincePlayed
+        {
+            get => this.UserSettings.OutOfRotationDaysSincePlayed.ToString();
+            set => this.UserSettings.OutOfRotationDaysSincePlayed = Convert.ToInt32(value);
+        }
+
         public ISet<string> SelectedGenres { get; } = new HashSet<string>();
 
         public IList<TagListItem> Tags { get; private set; }
@@ -45,6 +59,8 @@ namespace AveoAudio.ViewModels
         public ICommand ToggleFilterTagCommand { get; private set; }
 
         public ICommand ToggleGenreCommand { get; private set; }
+
+        private UserSettings UserSettings => ((App)Application.Current).UserSettings;
 
         public Task Configure() => SettingsManager.OpenLocalSettings();
 

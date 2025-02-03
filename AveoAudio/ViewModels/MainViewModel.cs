@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.UI.Dispatching;
 
 using Windows.Media.Core;
 using Windows.Media.Playback;
@@ -21,7 +22,7 @@ namespace AveoAudio.ViewModels
             Tracklist
         }
 
-        private readonly AppState appState = new AppState();
+        private readonly AppState appState = new();
         private readonly DispatcherQueue dispatcherQueue;
         private readonly ImageManager imageManager;
         private readonly MediaPlayer mediaPlayer;
@@ -238,12 +239,15 @@ namespace AveoAudio.ViewModels
             this.Playlist = null;
             
             var tracks = await this.musicLibrary.LoadTracksAsync(this.GenresAndTags.SelectedGenres);
+            var settings = ((App)Application.Current).UserSettings;
 
             new PlaylistBuilder(tracks, this.settings)
                 .WithTimeOfDay(this.appState.TimeOfDay)
                 .WithWeather(this.appState.Weather)
                 .ExcludeTags(this.GenresAndTags.ExcludingTags)
                 .FilterByTags(this.GenresAndTags.FilterTags)
+                .WithOutOfRotationTimeSinceAdded(settings.OutOfRotationDaysSinceAdded)
+                .WithOutOfRotationTimeSincePlayed(settings.OutOfRotationDaysSincePlayed)
                 .BuildPlaylist(this.playlist);
 
             var playlist = new MediaPlaybackList();

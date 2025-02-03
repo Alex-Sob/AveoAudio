@@ -185,6 +185,21 @@
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
+            <PivotItem Header="Settings">
+                <StackPanel>
+                    <ComboBox Header="Suggest if last played" SelectedValue="{x:Bind ViewModel.OutOfRotationDaysSincePlayed, Mode=TwoWay}" SelectedValuePath="Tag" Margin="0 20 0 0">
+                        <ComboBoxItem Tag="180">> half-year ago</ComboBoxItem>
+                        <ComboBoxItem Tag="365">> year ago</ComboBoxItem>
+                        <ComboBoxItem Tag="-1">Do not suggest</ComboBoxItem>
+                    </ComboBox>
+                    <ComboBox Header="Suggest if added" SelectedValue="{x:Bind ViewModel.OutOfRotationDaysSinceAdded, Mode=TwoWay}" SelectedValuePath="Tag" Margin="0 20 0 0">
+                        <ComboBoxItem Tag="0">Anytime</ComboBoxItem>
+                        <ComboBoxItem Tag="365">> year ago</ComboBoxItem>
+                        <ComboBoxItem Tag="730">> 2 years ago</ComboBoxItem>
+                        <ComboBoxItem Tag="1095">> 3 years ago</ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+            </PivotItem>
         </Pivot>
     </Grid>
 </UserControl>

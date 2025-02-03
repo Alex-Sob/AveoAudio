@@ -278,7 +278,7 @@
                         
                         <TextBlock Grid.Row="1" Grid.Column="1" Foreground="{StaticResource ForegroundBrush}" VerticalAlignment="Center" Visibility="{Binding IsSelected}">
                             <Run Text="{Binding Track.Genre, Mode=OneTime}" />
-                            <Run Text="{Binding Track.DateCreated, Mode=OneTime, Converter={StaticResource DateConverter}, ConverterParameter=dd.MM.yyyy}" />
+                            <Run Text="{Binding Track.DateAdded, Mode=OneTime, Converter={StaticResource DateConverter}, ConverterParameter=dd.MM.yyyy}" />
                         </TextBlock>
                     </Grid>
                 </DataTemplate>

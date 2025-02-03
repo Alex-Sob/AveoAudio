@@ -38,7 +38,9 @@ namespace AveoAudio
             this.InitializeComponent();
         }
 
-        public AppSettings Settings { get; private set; }
+        public AppSettings AppSettings { get; private set; }
+
+        public UserSettings UserSettings { get; } = new();
 
         /// <summary>
         /// Invoked when the application is launched.
@@ -56,8 +58,8 @@ namespace AveoAudio
 
             m_window.Activate();
 
-            this.Settings = await SettingsManager.GetSettingsAsync();
-            rootFrame.Navigate(typeof(MainPage), this.Settings);
+            this.AppSettings = await SettingsManager.GetSettingsAsync();
+            rootFrame.Navigate(typeof(MainPage), this.AppSettings);
         }
 
         private Window m_window;

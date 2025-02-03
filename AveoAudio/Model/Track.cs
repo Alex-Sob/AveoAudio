@@ -16,12 +16,12 @@ namespace AveoAudio
 
         static Track()
         {
-            parser = new(((App)Application.Current).Settings);
+            parser = new(((App)Application.Current).AppSettings);
         }
 
         public BitVector32 CustomTags { get; internal set; }
 
-        public DateTime DateCreated { get; private set; }
+        public DateTime DateAdded { get; private set; }
 
         public StorageFile File { get; private set; }
 
@@ -42,14 +42,14 @@ namespace AveoAudio
         public static async Task<Track> Load(StorageFile file, string genre)
         {
             var props = await file.Properties.GetMusicPropertiesAsync().AsTask().ConfigureAwait(false);
-            var (dateCreated, rawTags) = TrackDataParser.ExtractCustomProperties(file, props);
+            var (dateAdded, rawTags) = TrackDataParser.ExtractCustomProperties(file, props);
 
             var track = new Track
             {
                 Genre = genre,
                 File = file,
                 Properties = props,
-                DateCreated = dateCreated
+                DateAdded = dateAdded
             };
 
             parser.ParseTags(track, rawTags);
@@ -67,7 +67,7 @@ namespace AveoAudio
 
         public async Task UpdateTags(string rawTags)
         {
-            this.Properties.Subtitle = $"{this.DateCreated:dd.MM.yyyy};{rawTags}";
+            this.Properties.Subtitle = $"{this.DateAdded:dd.MM.yyyy};{rawTags}";
             await this.Properties.SavePropertiesAsync().AsTask().ConfigureAwait(false);
             parser.ParseTags(this, rawTags);
         }

@@ -23,16 +23,16 @@ namespace AveoAudio
             }
         }
         
-        public static (DateTime dateCreated, string rawTags) ExtractCustomProperties(StorageFile file, MusicProperties props)
+        public static (DateTime dateAdded, string rawTags) ExtractCustomProperties(StorageFile file, MusicProperties props)
         {
             if (props.Subtitle.Length < 10) return (file.DateCreated.Date, rawTags: "");
 
-            var hasDate = DateTime.TryParseExact(props.Subtitle.AsSpan(0, 10), "dd.MM.yyyy", null, DateTimeStyles.None, out var dateCreated);
-            dateCreated = hasDate ? dateCreated : file.DateCreated.Date;
+            var hasDate = DateTime.TryParseExact(props.Subtitle.AsSpan(0, 10), "dd.MM.yyyy", null, DateTimeStyles.None, out var dateAdded);
+            dateAdded = hasDate ? dateAdded : file.DateCreated.Date;
 
             var rawTags = props.Subtitle[10] == ';' ? props.Subtitle[11..] : "";
 
-            return (dateCreated, rawTags);
+            return (dateAdded, rawTags);
         }
 
         public void ParseTags(Track track, string rawTags)
