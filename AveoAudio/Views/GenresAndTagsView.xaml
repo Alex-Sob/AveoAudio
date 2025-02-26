@@ -185,7 +185,7 @@
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
-            <PivotItem Header="Settings">
+            <PivotItem Header="Dates">
                 <StackPanel>
                     <ComboBox Header="Suggest if last played" SelectedValue="{x:Bind ViewModel.OutOfRotationDaysSincePlayed, Mode=TwoWay}" SelectedValuePath="Tag" Margin="0 20 0 0">
                         <ComboBoxItem Tag="180">> half-year ago</ComboBoxItem>

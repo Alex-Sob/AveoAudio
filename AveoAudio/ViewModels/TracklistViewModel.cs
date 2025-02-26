@@ -12,21 +12,22 @@ namespace AveoAudio.ViewModels
     public class TracklistViewModel : NotificationBase
     {
         private readonly MainViewModel mainViewModel;
+        private readonly ListeningQueue queue;
 
         private TrackViewModel selectedTrack;
-        private bool showAll = true;
 
-        public TracklistViewModel(MainViewModel mainViewModel)
+        public TracklistViewModel(ListeningQueue queue, MainViewModel mainViewModel)
         {
+            this.queue = queue;
             this.mainViewModel = mainViewModel;
 
-            this.PlayTrackCommand = new DelegateCommand(this.PlayTrack);
-            this.SwitchViewCommand = new DelegateCommand<string>(this.SwitchView);
+            this.PlayCommand = new DelegateCommand(this.Play);
+            this.EnqueueCommand = new DelegateCommand(this.Enqueue);
         }
 
-        public ICommand PlayTrackCommand { get; set; }
+        public ICommand EnqueueCommand { get; }
 
-        public ICommand SwitchViewCommand { get; set; }
+        public ICommand PlayCommand { get; }
 
         public TrackViewModel SelectedTrack
         {
@@ -41,29 +42,29 @@ namespace AveoAudio.ViewModels
 
         public IList<TrackViewModel> Tracks { get; private set; } = new ObservableCollection<TrackViewModel>();
 
-        public event EventHandler ScrollToTrack;
-
-        public void AddTrack(Track track)
-        {
-            this.Tracks.Add(new TrackViewModel(track) { IsVisible = this.showAll });
-        }
-
-        public void GoToTrack(int index)
-        {
-            this.SelectedTrack = this.Tracks[index];
-            this.ScrollToTrack?.Invoke(this, EventArgs.Empty);
-        }
+        public void Enqueue() => this.queue.Enqueue(this.selectedTrack.Track);
 
         public async void LaunchFolder()
         {
             var file = this.SelectedTrack.Track.File;
             var folder = await file.GetParentAsync();
+
             await Launcher.LaunchFolderAsync(folder, new FolderLauncherOptions { ItemsToSelect = { file } });
         }
 
-        public void PlayTrack()
+        public void Play()
         {
-            this.mainViewModel.Play(this.Tracks.IndexOf(this.selectedTrack));
+            var index = this.Tracks.IndexOf(this.SelectedTrack);
+
+            if (index == this.queue.CurrentIndex)
+                this.mainViewModel.Play();
+            else if (index == this.queue.CurrentIndex + 1)
+                this.mainViewModel.PlayNext();
+            else
+            {
+                this.queue.AddNextUp(this.SelectedTrack.Track);
+                this.mainViewModel.PlayNext();
+            }
         }
 
         public void SaveTags()
@@ -74,14 +75,6 @@ namespace AveoAudio.ViewModels
                 select editor.Track.UpdateTags(editor.Value);
 
             this.mainViewModel.GetBusy(Task.WhenAll(tasks), "Saving");
-        }
-
-        private void SwitchView(string view)
-        {
-            this.showAll = (view == "All");
-
-            foreach (var track in this.Tracks)
-                track.IsVisible = this.showAll || track.Played;
         }
     }
 }

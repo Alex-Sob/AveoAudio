@@ -11,7 +11,7 @@ namespace AveoAudio
             foreach (var item in items) collection.Add(item);
         }
 
-        public static IEnumerable<T> Randomize<T>(this IEnumerable<T> source)
+        public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
         {
             var random = new Random();
 

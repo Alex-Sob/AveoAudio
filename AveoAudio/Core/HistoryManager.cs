@@ -4,11 +4,12 @@ using Windows.Storage;
 
 namespace AveoAudio
 {
-    public static class StateManager
+    // TODO: Consider loading history on startup
+    public static class HistoryManager
     {
         private const string LastPlayedDatesContainer = "LastPlayedDates";
 
-        static StateManager()
+        static HistoryManager()
         {
             var localSettings = ApplicationData.Current.LocalSettings;
             localSettings.CreateContainer(LastPlayedDatesContainer, ApplicationDataCreateDisposition.Always);
@@ -21,7 +22,7 @@ namespace AveoAudio
             return value?.Date;
         }
 
-        public static void SetLastPlayedOn(Track track)
+        public static void Add(Track track)
         {
             var localSettings = ApplicationData.Current.LocalSettings;
             localSettings.Containers[LastPlayedDatesContainer].Values[track.FileName] = DateTimeOffset.Now;

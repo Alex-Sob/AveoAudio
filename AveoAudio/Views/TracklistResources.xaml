@@ -1,0 +1,211 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="AveoAudio.Views.TracklistResources"
+    xmlns:views="using:AveoAudio.Views"
+    xmlns:viewModels="using:AveoAudio.ViewModels">
+    
+    <SolidColorBrush x:Key="EnqueueButtonBackground" Color="CornflowerBlue" Opacity="0.5" />
+    <SolidColorBrush x:Key="ScrollButtonBrush" Color="DarkGray" />
+    <SolidColorBrush x:Key="ScrollButtonActiveBrush" Color="Gray" />
+    <SolidColorBrush x:Key="TrackButtonActiveBrush" Color="White" />
+    <SolidColorBrush x:Key="TrackInfoTextBrush" Color="Gray" />
+
+    <views:DateConverter x:Key="DateConverter" />
+
+    <Style x:Key="CurrentTrackMarker" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+        <Setter Property="Foreground" Value="CornflowerBlue" />
+        <Setter Property="Padding" Value="1 0 0 0" />
+        <Setter Property="Text" Value="&#xE725;" />
+    </Style>
+
+    <Style x:Key="ScrollButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{StaticResource ScrollButtonBrush}" />
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+        <Setter Property="Foreground" Value="{StaticResource ScrollButtonBrush}" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="RootGrid" Background="{TemplateBinding Background}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <PointerUpThemeAnimation Storyboard.TargetName="RootGrid"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Stroke">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource ScrollButtonActiveBrush}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource ScrollButtonActiveBrush}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <PointerUpThemeAnimation Storyboard.TargetName="RootGrid"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Stroke">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource ScrollButtonActiveBrush}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource ScrollButtonActiveBrush}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <PointerDownThemeAnimation Storyboard.TargetName="RootGrid"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBackgroundDisabled}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBorderBrushDisabled}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonForegroundDisabled}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Ellipse x:Name="Ellipse" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="2" />
+                        <ContentPresenter x:Name="ContentPresenter" Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TrackButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="RootGrid">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <PointerUpThemeAnimation Storyboard.TargetName="RootGrid"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Stroke">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource TrackButtonActiveBrush}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <PointerUpThemeAnimation Storyboard.TargetName="RootGrid"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Stroke">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource TrackButtonActiveBrush}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource TrackButtonActiveBrush}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <PointerDownThemeAnimation Storyboard.TargetName="RootGrid"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBackgroundDisabled}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="BorderBrush">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonBorderBrushDisabled}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonForegroundDisabled}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Ellipse x:Name="Ellipse" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="2" />
+                        <ContentPresenter x:Name="ContentPresenter" Content="{TemplateBinding Content}" Margin="1 0 0 0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="PlayButton" BasedOn="{StaticResource TrackButton}" TargetType="Button">
+        <Setter Property="Background" Value="CornflowerBlue" />
+        <Setter Property="Content" Value="&#xE725;" />
+    </Style>
+
+    <Style x:Key="EnqueueButton" BasedOn="{StaticResource TrackButton}" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource EnqueueButtonBackground}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="Content" Value="&#xe710;" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <!-- Binding to method with x:Bind in styles does not work somehow -->
+    <DataTemplate x:Key="TrackTemplate" x:DataType="viewModels:TrackViewModel">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="35" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <TextBlock
+                Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Style="{StaticResource CurrentTrackMarker}"
+                Visibility="{Binding IsCurrent}" />
+
+            <Button
+                Grid.RowSpan="2" Height="40"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                Command="{Binding PlayCommand, Mode=OneTime}"
+                Style="{StaticResource PlayButton}"
+                Visibility="{Binding IsSelected}" />
+
+            <TextBlock
+                Grid.Column="1" Margin="10 0" VerticalAlignment="Center"
+                Text="{Binding Track.FileName, Mode=OneTime}" TextWrapping="Wrap" />
+
+            <TextBox
+                Grid.Column="2" VerticalAlignment="Center"
+                Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+
+            <TextBlock Grid.Row="1" Grid.Column="1" Margin="10 0" Foreground="{StaticResource TrackInfoTextBrush}" VerticalAlignment="Center" Visibility="{Binding IsSelected}">
+                <Run Text="{Binding Track.Genre, Mode=OneTime}" /> | <Run Text="{Binding Track.DateAdded, Mode=OneTime, Converter={StaticResource DateConverter}, ConverterParameter=dd.MM.yyyy}" />
+            </TextBlock>
+
+            <Button
+                Grid.Column="3" Height="30" Width="30" HorizontalAlignment="Right"
+                Command="{Binding EnqueueCommand, Mode=OneTime}"
+                Style="{StaticResource EnqueueButton}"
+                Visibility="{Binding IsSelected}" />
+        </Grid>
+    </DataTemplate>
+
+    <Style x:Key="Tracklist" TargetType="ListView">
+        <Setter Property="ItemTemplate" Value="{StaticResource TrackTemplate}" />
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Padding" Value="12 6" />
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

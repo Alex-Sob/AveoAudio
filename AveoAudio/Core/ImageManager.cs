@@ -6,6 +6,8 @@ using Windows.Storage;
 
 namespace AveoAudio
 {
+    // TODO: [Images] Seasons
+    // TODO: [Images] Provide UI to rotate image
     public class ImageManager
     {
         private const string DefaultFolder = "Default";
@@ -65,7 +67,7 @@ namespace AveoAudio
             else
             {
                 var images = await folder.GetFilesAsync();
-                var randomizedImages = images.Randomize().ToList();
+                var randomizedImages = images.Shuffle().ToList();
 
                 if (randomizedImages.Any())
                 {

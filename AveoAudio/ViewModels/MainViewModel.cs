@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,39 +18,43 @@ namespace AveoAudio.ViewModels
     {
         private enum Pane
         {
-            GenresAndTags,
-            NowPlaying,
-            Tracklist
+            Filter,
+            Player,
+            Queue,
+            History
         }
 
+        private readonly AppSettings appSettings;
         private readonly AppState appState = new();
         private readonly DispatcherQueue dispatcherQueue;
         private readonly ImageManager imageManager;
         private readonly MediaPlayer mediaPlayer;
         private readonly MusicLibrary musicLibrary;
-        private readonly AppSettings settings;
-        private readonly IList<Track> playlist = [];
+        private readonly ListeningQueue queue;
 
         private string busyText;
         private Track currentTrack;
         private ImageSource imageSource;
+        private bool listened;
         private MediaPlaybackList playbackList;
         private int selectedPane;
 
-        public MainViewModel(AppSettings settings, MediaPlayer mediaPlayer, DispatcherQueue dispatcherQueue)
+        public MainViewModel(AppSettings appSettings, MediaPlayer mediaPlayer, DispatcherQueue dispatcherQueue)
         {
             this.mediaPlayer = mediaPlayer;
-            this.settings = settings;
-
-            this.imageManager = new ImageManager();
-
-            this.musicLibrary = new MusicLibrary();
+            this.appSettings = appSettings;
             this.dispatcherQueue = dispatcherQueue;
 
-            this.Selectors = new SelectorsViewModel(this.appState);
-            this.GenresAndTags = new GenresAndTagsViewModel(this.appState, this.settings);
-            this.Tracklist = new TracklistViewModel(this);
+            this.musicLibrary = new MusicLibrary();
+            this.queue = new ListeningQueue(appSettings.PlaylistSize);
+            this.imageManager = new ImageManager();
 
+            this.Selectors = new SelectorsViewModel(this.appState);
+            this.GenresAndTags = new GenresAndTagsViewModel(this.appState, this.appSettings);
+            this.Queue = new QueueViewModel(this.queue, this);
+            this.History = new HistoryViewModel(this.queue, this);
+
+            this.queue.CollectionChanged += this.OnQueueChanged;
             this.mediaPlayer.PlaybackSession.PositionChanged += this.OnPositionChanged;
             this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
 
@@ -66,11 +71,9 @@ namespace AveoAudio.ViewModels
             }
         }
 
-        public bool CanBuildPlaylist => this.SelectedPane < (int)Pane.Tracklist;
+        public bool CanBuildPlaylist => this.SelectedPane < (int)Pane.Queue;
 
-        public bool CanFindInTracklist => this.SelectedPane == (int)Pane.NowPlaying;
-
-        public bool CanSaveTags => this.SelectedPane == (int)Pane.Tracklist;
+        public bool CanSaveTags => this.SelectedPane == (int)Pane.History;
 
         public Track CurrentTrack
         {
@@ -106,9 +109,11 @@ namespace AveoAudio.ViewModels
             }
         }
 
-        public GenresAndTagsViewModel GenresAndTags { get; private set; }
+        public GenresAndTagsViewModel GenresAndTags { get; }
 
         public bool HasCurrentTrack => this.currentTrack != null;
+
+        public HistoryViewModel History { get; }
 
         public ImageSource Image
         {
@@ -128,6 +133,8 @@ namespace AveoAudio.ViewModels
             set => SetProperty(ref this.playbackList, value);
         }
 
+        public QueueViewModel Queue { get; }
+
         public int SelectedPane
         {
             get => this.selectedPane;
@@ -137,28 +144,27 @@ namespace AveoAudio.ViewModels
                 {
                     this.OnPropertyChanged(nameof(this.CanBuildPlaylist));
                     this.OnPropertyChanged(nameof(this.CanSaveTags));
-                    this.OnPropertyChanged(nameof(this.CanFindInTracklist));
                 }
             }
         }
 
-        public SelectorsViewModel Selectors { get; private set; }
-
-        public TracklistViewModel Tracklist { get; private set; }
+        public SelectorsViewModel Selectors { get; }
 
         private int CurrentTrackIndex => (int)this.playbackList.CurrentItemIndex;
+
+        private static UserSettings UserSettings => ((App)Application.Current).UserSettings;
 
         public void BuildPlaylist()
         {
             this.GetBusy(this.BuildPlaylistAsync(), "Building Playlist");
         }
 
-        public void FindInTracklist()
+        public void ViewInQueue()
         {
-            this.SelectedPane = (int)Pane.Tracklist;
+            ShowPane(Pane.Queue);
             if (this.HasCurrentTrack)
             {
-                this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => this.Tracklist.GoToTrack(this.CurrentTrackIndex));
+                this.Queue.GoToTrack(this.CurrentTrackIndex);
             }
         }
 
@@ -177,7 +183,7 @@ namespace AveoAudio.ViewModels
 
         public void MoveNext()
         {
-            if (this.playbackList != null && this.CurrentTrackIndex < this.playlist.Count - 1)
+            if (this.playbackList != null && this.CurrentTrackIndex < this.queue.Capacity - 1)
                 this.playbackList.MoveNext();
         }
 
@@ -192,11 +198,16 @@ namespace AveoAudio.ViewModels
             this.Selectors.IsOpen = !this.Selectors.IsOpen;
         }
 
-        public void Play(int index)
+        public void Play()
         {
-            this.playbackList.MoveTo((uint)index);
-            this.SelectedPane = (int)Pane.NowPlaying;
+            ShowPane(Pane.Player);
             this.mediaPlayer.Play();
+        }
+
+        public void PlayNext()
+        {
+            this.playbackList.MoveNext();
+            this.Play();
         }
 
         public void RewindToStart()
@@ -214,53 +225,61 @@ namespace AveoAudio.ViewModels
                 this.mediaPlayer.Play();
         }
 
-        private static void LoadPlaylist(MediaPlaybackList playlist, IEnumerable<Track> tracks)
+        private static void AddToPlaylist(MediaPlaybackList playlist, IEnumerable<Track> tracks)
         {
             foreach (var track in tracks)
             {
-                var item = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(track.File));
-
-                var props = item.GetDisplayProperties();
-                props.Type = Windows.Media.MediaPlaybackType.Music;
-                props.MusicProperties.Artist = track.Properties.Artist;
-                props.MusicProperties.Title = track.Properties.Title;
-                item.ApplyDisplayProperties(props);
-
-                playlist.Items.Add(item);
+                AddToPlaylist(playlist, track);
             }
+        }
+
+        private static void AddToPlaylist(MediaPlaybackList playlist, Track track)
+        {
+            var item = CreateMediaSource(track);
+            playlist.Items.Add(item);
+        }
+
+        private static MediaPlaybackItem CreateMediaSource(Track track)
+        {
+            var item = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(track.File));
+
+            var props = item.GetDisplayProperties();
+            props.Type = Windows.Media.MediaPlaybackType.Music;
+            props.MusicProperties.Artist = track.Properties.Artist;
+            props.MusicProperties.Title = track.Properties.Title;
+            item.ApplyDisplayProperties(props);
+
+            return item;
         }
 
         private async Task BuildPlaylistAsync()
         {
             this.mediaPlayer.Pause();
-            this.Tracklist.Tracks.Clear();
 
-            if (this.playbackList != null) this.playbackList.CurrentItemChanged -= this.OnTrackChanged;
+            if (this.Playlist != null) this.Playlist.CurrentItemChanged -= this.OnTrackChanged;
             this.Playlist = null;
-            
-            var tracks = await this.musicLibrary.LoadTracksAsync(this.GenresAndTags.SelectedGenres);
-            var settings = ((App)Application.Current).UserSettings;
 
-            new PlaylistBuilder(tracks, this.settings)
+            var tracks = await this.musicLibrary.LoadTracksAsync(this.GenresAndTags.SelectedGenres);
+
+            var builder = new PlaylistBuilder(tracks, this.appSettings)
                 .WithTimeOfDay(this.appState.TimeOfDay)
                 .WithWeather(this.appState.Weather)
                 .ExcludeTags(this.GenresAndTags.ExcludingTags)
                 .FilterByTags(this.GenresAndTags.FilterTags)
-                .WithOutOfRotationTimeSinceAdded(settings.OutOfRotationDaysSinceAdded)
-                .WithOutOfRotationTimeSincePlayed(settings.OutOfRotationDaysSincePlayed)
-                .BuildPlaylist(this.playlist);
+                .WithOutOfRotationTimeSinceAdded(UserSettings.OutOfRotationDaysSinceAdded)
+                .WithOutOfRotationTimeSincePlayed(UserSettings.OutOfRotationDaysSincePlayed);
 
-            var playlist = new MediaPlaybackList();
-            LoadPlaylist(playlist, this.playlist);
-            this.Playlist = playlist.Items.Any() ? playlist : null;
-            playlist.CurrentItemChanged += this.OnTrackChanged;
+            var query = builder.Build().Shuffle().Take(this.appSettings.PlaylistSize);
 
-            var timeOfDay = this.Selectors.SelectedTimeOfDay ?? "";
-            var weather = this.Selectors.SelectedWeather ?? "";
-            var imagePath = await this.imageManager.GetNextImage(timeOfDay, weather);
-            this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
+            UpdatePlaylist(query);
+            await UpdateImageAsync();
 
-            this.SelectedPane = (int)Pane.NowPlaying;
+            ShowPane(Pane.Player);
+        }
+
+        private void Dispatch(Action action)
+        {
+            this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action());
         }
 
         private async void Initialize()
@@ -269,9 +288,15 @@ namespace AveoAudio.ViewModels
             this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
         }
 
+        private void OnQueueChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add && e.NewStartingIndex == this.queue.CurrentIndex + 1)
+                this.Playlist.Items[this.CurrentTrackIndex + 1] = CreateMediaSource(this.queue.Next);
+        }
+
         private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
         {
-            this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            this.Dispatch(() =>
             {
                 this.OnPropertyChanged(nameof(this.IsPlaying));
                 this.OnPropertyChanged(nameof(this.IsPaused));
@@ -283,27 +308,57 @@ namespace AveoAudio.ViewModels
             if (this.CurrentTrackIndex < 0) return;
 
             var session = this.mediaPlayer.PlaybackSession;
-            var trackViewModel = this.Tracklist.Tracks[this.CurrentTrackIndex];
 
-            if (!trackViewModel.Played && session.Position.TotalSeconds > session.NaturalDuration.TotalSeconds / 2)
+            if (!this.listened && session.Position.TotalSeconds > session.NaturalDuration.TotalSeconds * 0.9)
             {
-                trackViewModel.Played = true;
-                StateManager.SetLastPlayedOn(this.currentTrack);
+                this.listened = true;
+                HistoryManager.Add(this.currentTrack);
+                this.Dispatch(() => this.History.Add(this.currentTrack));
             }
         }
 
         private void OnTrackChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
-            var index = this.CurrentTrackIndex;
-            if (index < 0 || index >= this.playlist.Count) return;
+            this.listened = false;
+            var newIndex = this.CurrentTrackIndex;
 
-            var track = this.playlist[index];
-            this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => this.CurrentTrack = track);
+            if (newIndex < 0 || newIndex >= this.queue.Capacity) return;
 
-            if (index == this.Tracklist.Tracks.Count)
+            this.Dispatch(() =>
             {
-                this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => this.Tracklist.AddTrack(this.currentTrack));
-            }
+                this.CurrentTrack = this.queue[newIndex];
+
+                if (newIndex > this.queue.CurrentIndex)
+                {
+                    this.queue.MoveNext();
+                    AddToPlaylist(this.Playlist, this.queue.Next);
+                }
+                else
+                {
+                    this.queue.MoveBack();
+                }
+            });
+        }
+
+        private void ShowPane(Pane pane) => this.SelectedPane = (int)pane;
+
+        private async Task UpdateImageAsync()
+        {
+            var timeOfDay = this.Selectors.SelectedTimeOfDay ?? "";
+            var weather = this.Selectors.SelectedWeather ?? "";
+            var imagePath = await this.imageManager.GetNextImage(timeOfDay, weather);
+            this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
+        }
+
+        private void UpdatePlaylist(IEnumerable<Track> query)
+        {
+            this.queue.Reload(query);
+
+            var playlist = new MediaPlaybackList();
+            AddToPlaylist(playlist, this.queue[0]);
+
+            this.Playlist = playlist.Items.Any() ? playlist : null;
+            playlist.CurrentItemChanged += this.OnTrackChanged;
         }
     }
 }

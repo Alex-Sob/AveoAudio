@@ -9,13 +9,7 @@ namespace AveoAudio
         private readonly AppSettings settings = settings;
         private IEnumerable<Track> query = source;
 
-        public void BuildPlaylist(IList<Track> playlist)
-        {
-            var tracks = this.query.Randomize().Take(this.settings.PlaylistSize);
-
-            playlist.Clear();
-            playlist.AddRange(tracks);
-        }
+        public IEnumerable<Track> Build() => this.query;
 
         public PlaylistBuilder ExcludeTags(ISet<string> tags)
         {

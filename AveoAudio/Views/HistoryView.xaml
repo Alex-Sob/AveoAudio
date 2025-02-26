@@ -1,0 +1,34 @@
+﻿<UserControl
+    x:Class="AveoAudio.Views.HistoryView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="using:AveoAudio.ViewModels"
+    xmlns:views="using:AveoAudio.Views"
+    mc:Ignorable="d"
+    d:DesignHeight="300" d:DesignWidth="400"
+    VerticalContentAlignment="Stretch"
+    x:Name="view">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="TracklistResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Background="{Binding Background, ElementName=view}">
+        <ListView x:Name="tracklist"
+            Margin="20 20 70 30" VerticalContentAlignment="Stretch"
+            ItemsSource="{x:Bind ViewModel.History, Mode=OneTime}"
+            SelectedItem="{x:Bind ViewModel.SelectedTrack, Mode=TwoWay}"
+            Style="{StaticResource Tracklist}"
+            DoubleTapped="{x:Bind ViewModel.Play}">
+        </ListView>
+        
+        <Button Style="{StaticResource ScrollButton}" HorizontalAlignment="Right" Margin="15 10" VerticalAlignment="Top" Click="OnScrollToTop">&#xF0AD;</Button>
+        <Button Style="{StaticResource ScrollButton}" HorizontalAlignment="Right" Margin="15 30" VerticalAlignment="Bottom" Click="OnScrollToBottom">&#xF0AE;</Button>
+    </Grid>
+</UserControl>

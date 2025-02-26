@@ -1,19 +1,23 @@
-﻿using System.Threading.Tasks;
+﻿using System.Windows.Input;
 
 namespace AveoAudio.ViewModels
 {
-    public class TrackViewModel : NotificationBase
+    public class TrackViewModel(TracklistViewModel tracklist, Track track) : NotificationBase
     {
-        private bool isSelected;
-        private bool isVisible;
+        private readonly TracklistViewModel tracklist = tracklist;
 
-        public TrackViewModel(Track track)
-        {
-            this.Track = track;
-            this.Value = track.Tags;
-        }
+        private bool isCurrent;
+        private bool isSelected;
+
+        public ICommand EnqueueCommand => this.tracklist.EnqueueCommand;
 
         public bool HasChanges => this.Value != this.Track.Tags;
+
+        public bool IsCurrent
+        {
+            get => this.isCurrent;
+            set => this.SetProperty(ref this.isCurrent, value);
+        }
 
         public bool IsSelected
         {
@@ -21,16 +25,10 @@ namespace AveoAudio.ViewModels
             set => this.SetProperty(ref this.isSelected, value);
         }
 
-        public bool IsVisible
-        {
-            get => this.isVisible;
-            set => this.SetProperty(ref this.isVisible, value);
-        }
+        public ICommand PlayCommand => this.tracklist.PlayCommand;
 
-        public bool Played { get; set; }
+        public Track Track { get; } = track;
 
-        public Track Track { get; }
-
-        public string Value { get; set; }
+        public string Value { get; set; } = track.Tags;
     }
 }

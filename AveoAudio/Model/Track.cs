@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -10,6 +11,7 @@ using Windows.Storage.FileProperties;
 
 namespace AveoAudio
 {
+    [DebuggerDisplay("{FileName}")]
     public class Track
     {
         private static TrackDataParser parser;
@@ -29,7 +31,7 @@ namespace AveoAudio
 
         public string Genre { get; private set; }
 
-        public DateTime? LastPlayedOn => StateManager.GetLastPlayedOn(this);
+        public DateTime? LastPlayedOn => HistoryManager.GetLastPlayedOn(this);
 
         public MusicProperties Properties { get; private set; }
 
