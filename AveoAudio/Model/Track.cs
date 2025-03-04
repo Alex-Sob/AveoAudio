@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -11,10 +10,10 @@ using Windows.Storage.FileProperties;
 
 namespace AveoAudio
 {
-    [DebuggerDisplay("{FileName}")]
     public class Track
     {
         private static TrackDataParser parser;
+        private string fileName;
 
         static Track()
         {
@@ -27,7 +26,7 @@ namespace AveoAudio
 
         public StorageFile File { get; private set; }
 
-        public string FileName => Path.GetFileNameWithoutExtension(this.File.Name);
+        public string FileName => this.fileName ?? (fileName = Path.GetFileNameWithoutExtension(this.File.Name));
 
         public string Genre { get; private set; }
 
@@ -59,13 +58,7 @@ namespace AveoAudio
             return track;
         }
 
-        public override string ToString()
-        {
-            var artist = this.Properties.Artist ?? "";
-            var title = this.Properties.Title ?? "";
-
-            return artist != "" && title != "" ? $"{this.Properties.Artist} - {this.Properties.Title}" : this.FileName;
-        }
+        public override string ToString() => this.FileName;
 
         public async Task UpdateTags(string rawTags)
         {
