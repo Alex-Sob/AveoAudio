@@ -11,46 +11,41 @@ namespace AveoAudio
     public static class SettingsManager
     {
         private const string FileName = "AppSettings.json";
+        private const string FolderName = nameof(AveoAudio);
 
-        public static Task<AppSettings> GetSettingsAsync()
-        {
-            return GetData<AppSettings>(FileName);
-        }
+        public static Task<AppSettings> GetSettingsAsync() => GetDataAsync<AppSettings>();
 
         public static async Task OpenLocalSettings()
         {
-            var file = await ApplicationData.Current.LocalFolder.GetFileAsync(FileName);
+            var file = await GetFileAsync().ConfigureAwait(false);
             await Launcher.LaunchFileAsync(file);
         }
 
-        private static async Task<StorageFile> EnsureFileAsync(string name)
+        private static async Task<StorageFile> CopyDefaultFileAsync()
         {
-            var file = await GetFileAsync(name);
-            if (file != null) return file;
-
-            var uri = new Uri($"ms-appx:///Data/{name}");
+            var uri = new Uri($"ms-appx:///Data/{FileName}");
             var defaultFile = await StorageFile.GetFileFromApplicationUriAsync(uri);
-            var localFolder = ApplicationData.Current.LocalFolder;
-            return await defaultFile.CopyAsync(localFolder);
+            var folder = await KnownFolders.DocumentsLibrary.GetFolderAsync(FolderName);
+            return await defaultFile.CopyAsync(folder);
         }
 
-        private static async Task<T> GetData<T>(string fileName)
+        private static async Task<T> GetDataAsync<T>()
         {
-            var file = await EnsureFileAsync(fileName);
+            var file = await GetFileAsync().ConfigureAwait(false);
+            using var stream = await file.OpenAsync(FileAccessMode.Read);
 
-            using (var stream = await file.OpenAsync(FileAccessMode.Read))
-            {
-                var settings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };
-                var serializer = new DataContractJsonSerializer(typeof(T), settings);
-                return (T)serializer.ReadObject(stream.AsStreamForRead());
-            }
+            var settings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };
+            var serializer = new DataContractJsonSerializer(typeof(T), settings);
+            return (T)serializer.ReadObject(stream.AsStreamForRead());
         }
 
-        private static async Task<StorageFile> GetFileAsync(string name)
+        private static async Task<StorageFile> GetFileAsync()
         {
-            var folder = ApplicationData.Current.LocalFolder;
-            if (await folder.TryGetItemAsync(name) == null) return null;
-            return await folder.GetFileAsync(name);
+            var folder = await KnownFolders.DocumentsLibrary.TryGetItemAsync(FolderName) as StorageFolder;
+            folder ??= await KnownFolders.DocumentsLibrary.CreateFolderAsync(FolderName);
+
+            var file = await folder.TryGetItemAsync(FileName) as StorageFile;
+            return file ??= await CopyDefaultFileAsync().ConfigureAwait(false);
         }
     }
 }
