@@ -1,34 +1,96 @@
-﻿using System.Windows.Input;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace AveoAudio.ViewModels
+namespace AveoAudio.ViewModels;
+
+public class TrackViewModel(TracklistViewModel tracklist, Track track) : NotificationBase
 {
-    public class TrackViewModel(TracklistViewModel tracklist, Track track) : NotificationBase
+    private bool isCurrent;
+    private bool isSelected;
+
+    private TagListBuilder tagsBuilder = new(track.Tags);
+
+    public bool HasChanges => this.Tags != this.Track.Tags;
+
+    public bool IsCurrent
     {
-        private readonly TracklistViewModel tracklist = tracklist;
+        get => this.isCurrent;
+        set => this.SetProperty(ref this.isCurrent, value);
+    }
 
-        private bool isCurrent;
-        private bool isSelected;
+    public bool IsSelected
+    {
+        get => this.isSelected;
+        set => this.SetProperty(ref this.isSelected, value);
+    }
 
-        public ICommand EnqueueCommand => this.tracklist.EnqueueCommand;
+    public Track Track { get; } = track;
 
-        public bool HasChanges => this.Value != this.Track.Tags;
+    public TracklistViewModel Tracklist { get; } = tracklist;
 
-        public bool IsCurrent
+    public string Tags
+    {
+        get => this.tagsBuilder.Tags;
+        set
         {
-            get => this.isCurrent;
-            set => this.SetProperty(ref this.isCurrent, value);
+            this.SetProperty(ref this.tagsBuilder, new TagListBuilder(value));
+            this.OnPropertyChanged(nameof(HasChanges));
+        }
+    }
+
+    public void EditTags()
+    {
+        if (this.Tracklist.EditingTagsFor != this) UpdateOtherTags();
+
+        this.Tracklist.EditingTagsFor = this;
+
+        var tags = this.Tracklist.TagGroups.SelectMany(g => g);
+
+        foreach (var tag in tags)
+        {
+            tag.IsChecked = this.tagsBuilder.HasTag(tag);
+        }
+    }
+
+    public void UpdateTags() => this.Tracklist.UpdateTags(UpdateTagsAsync());
+
+    public void ToggleBestTimeOfDay(string tag)
+    {
+        if (!Enum.TryParse<TimesOfDay>(tag, out var timesOfDay)) return;
+
+        this.tagsBuilder.ToggleBestTimeOfDay(timesOfDay);
+
+        OnPropertyChanged(nameof(this.Tags));
+        OnPropertyChanged(nameof(this.HasChanges));
+    }
+
+    public void ToggleTag(string tag)
+    {
+        this.tagsBuilder.ToggleTag(tag);
+
+        OnPropertyChanged(nameof(this.Tags));
+        OnPropertyChanged(nameof(this.HasChanges));
+    }
+
+    private void UpdateOtherTags()
+    {
+        var others = this.Tracklist.TagGroups[^1];
+        others.Tags.Clear();
+
+        var alternate = this.Tracklist.CommonTags.GetAlternateLookup<ReadOnlySpan<char>>();
+
+        foreach (var tag in this.tagsBuilder.Tags)
+        {
+            if (!alternate.Contains(tag)) others.Tags.Add(new(tag.ToString(), this.Tracklist));
         }
 
-        public bool IsSelected
-        {
-            get => this.isSelected;
-            set => this.SetProperty(ref this.isSelected, value);
-        }
+        this.Tracklist.TagGroups[^1] = others;
+    }
 
-        public ICommand PlayCommand => this.tracklist.PlayCommand;
-
-        public Track Track { get; } = track;
-
-        public string Value { get; set; } = track.Tags;
+    private async Task UpdateTagsAsync()
+    {
+        await this.Track.UpdateTags(this.Tags);
+        this.OnPropertyChanged(nameof(HasChanges));
     }
 }

@@ -12,355 +12,346 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 
-namespace AveoAudio.ViewModels
+namespace AveoAudio.ViewModels;
+
+public class MainViewModel : NotificationBase
 {
-    public class MainViewModel : NotificationBase
+    private enum Pane
     {
-        private enum Pane
+        Filter,
+        Player,
+        Queue,
+        History
+    }
+
+    private readonly AppSettings appSettings;
+    private readonly AppState appState = new();
+    private readonly DispatcherQueue dispatcherQueue;
+    private readonly ImageManager imageManager;
+    private readonly MediaPlayer mediaPlayer;
+    private readonly MusicLibrary musicLibrary;
+    private readonly ListeningQueue queue;
+
+    private string busyText;
+    private Track currentTrack;
+    private ImageSource imageSource;
+    private bool listened;
+    private MediaPlaybackList playbackList;
+    private int selectedPane;
+
+    public MainViewModel(AppSettings appSettings, MediaPlayer mediaPlayer, DispatcherQueue dispatcherQueue)
+    {
+        this.mediaPlayer = mediaPlayer;
+        this.appSettings = appSettings;
+        this.dispatcherQueue = dispatcherQueue;
+
+        this.musicLibrary = new MusicLibrary();
+        this.queue = new ListeningQueue(appSettings.PlaylistSize);
+        this.imageManager = new ImageManager();
+
+        this.Selectors = new SelectorsViewModel(this.appState);
+        this.GenresAndTags = new GenresAndTagsViewModel(this.appState, this.appSettings);
+        this.Queue = new QueueViewModel(this.queue, this);
+        this.History = new HistoryViewModel(this.queue, this);
+
+        this.queue.CollectionChanged += this.OnQueueChanged;
+        this.mediaPlayer.PlaybackSession.PositionChanged += this.OnPositionChanged;
+        this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
+
+        this.Initialize();
+    }
+
+    public string BusyText
+    {
+        get => this.busyText;
+        set
         {
-            Filter,
-            Player,
-            Queue,
-            History
+            if (this.SetProperty(ref this.busyText, value))
+                this.OnPropertyChanged(nameof(this.IsBusy));
         }
+    }
 
-        private readonly AppSettings appSettings;
-        private readonly AppState appState = new();
-        private readonly DispatcherQueue dispatcherQueue;
-        private readonly ImageManager imageManager;
-        private readonly MediaPlayer mediaPlayer;
-        private readonly MusicLibrary musicLibrary;
-        private readonly ListeningQueue queue;
+    public bool CanBuildPlaylist => this.SelectedPane < (int)Pane.Queue;
 
-        private string busyText;
-        private Track currentTrack;
-        private ImageSource imageSource;
-        private bool listened;
-        private MediaPlaybackList playbackList;
-        private int selectedPane;
+    public bool CanSaveTags => this.SelectedPane == (int)Pane.History;
 
-        public MainViewModel(AppSettings appSettings, MediaPlayer mediaPlayer, DispatcherQueue dispatcherQueue)
+    public Track CurrentTrack
+    {
+        get => this.currentTrack;
+        set
         {
-            this.mediaPlayer = mediaPlayer;
-            this.appSettings = appSettings;
-            this.dispatcherQueue = dispatcherQueue;
-
-            this.musicLibrary = new MusicLibrary();
-            this.queue = new ListeningQueue(appSettings.PlaylistSize);
-            this.imageManager = new ImageManager();
-
-            this.Selectors = new SelectorsViewModel(this.appState);
-            this.GenresAndTags = new GenresAndTagsViewModel(this.appState, this.appSettings);
-            this.Queue = new QueueViewModel(this.queue, this);
-            this.History = new HistoryViewModel(this.queue, this);
-
-            this.queue.CollectionChanged += this.OnQueueChanged;
-            this.mediaPlayer.PlaybackSession.PositionChanged += this.OnPositionChanged;
-            this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
-
-            this.Initialize();
-        }
-
-        public string BusyText
-        {
-            get => this.busyText;
-            set
+            if (this.SetProperty(ref this.currentTrack, value))
             {
-                if (this.SetProperty(ref this.busyText, value))
-                    this.OnPropertyChanged(nameof(this.IsBusy));
+                this.OnPropertyChanged(nameof(this.HasCurrentTrack));
+                this.OnPropertyChanged(nameof(this.DisplayTags));
             }
         }
+    }
 
-        public bool CanBuildPlaylist => this.SelectedPane < (int)Pane.Queue;
-
-        public bool CanSaveTags => this.SelectedPane == (int)Pane.History;
-
-        public Track CurrentTrack
+    public string DisplayTags
+    {
+        get
         {
-            get => this.currentTrack;
-            set
+            if (!this.HasCurrentTrack) return null;
+
+            int current = 0;
+            Span<char> span = stackalloc char[this.currentTrack.Tags.Length + 1];
+
+            foreach (ReadOnlySpan<char> tag in this.currentTrack.Tags)
             {
-                if (this.SetProperty(ref this.currentTrack, value))
-                {
-                    this.OnPropertyChanged(nameof(this.HasCurrentTrack));
-                    this.OnPropertyChanged(nameof(this.DisplayTags));
-                }
+                if (Enum.TryParse<TimesOfDay>(tag, out _)) continue;
+                tag.CopyTo(span.Slice(current, tag.Length));
+                current += tag.Length;
+                span[current++] = ' ';
+            }
+
+            return span[..current].ToString();
+        }
+    }
+
+    public GenresAndTagsViewModel GenresAndTags { get; }
+
+    public bool HasCurrentTrack => this.currentTrack != null;
+
+    public HistoryViewModel History { get; }
+
+    public ImageSource Image
+    {
+        get => this.imageSource;
+        set => this.SetProperty(ref this.imageSource, value);
+    }
+
+    public bool IsBusy => this.BusyText != null;
+
+    public bool IsPlaying => this.mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
+
+    public bool IsPaused => !this.IsPlaying;
+
+    public MediaPlaybackList Playlist
+    {
+        get => this.playbackList;
+        set => SetProperty(ref this.playbackList, value);
+    }
+
+    public QueueViewModel Queue { get; }
+
+    public int SelectedPane
+    {
+        get => this.selectedPane;
+        set
+        {
+            if (this.SetProperty(ref this.selectedPane, value))
+            {
+                this.OnPropertyChanged(nameof(this.CanBuildPlaylist));
+                this.OnPropertyChanged(nameof(this.CanSaveTags));
             }
         }
+    }
 
-        public string DisplayTags
+    public SelectorsViewModel Selectors { get; }
+
+    private int CurrentTrackIndex => (int)this.playbackList.CurrentItemIndex;
+
+    private static UserSettings UserSettings => App.Current.UserSettings;
+
+    public void BuildPlaylist()
+    {
+        this.GetBusy(this.BuildPlaylistAsync(), "Building Playlist");
+    }
+
+    public void ViewInQueue()
+    {
+        ShowPane(Pane.Queue);
+        if (this.HasCurrentTrack)
         {
-            get
-            {
-                if (!this.HasCurrentTrack) return null;
-
-                int current = 0;
-                Span<char> span = stackalloc char[this.currentTrack.Tags.Length + 1];
-
-                foreach (var tag in this.currentTrack.Tags)
-                {
-                    if (Enum.TryParse<TimesOfDay>(tag, out var timesOfDay)) continue;
-                    tag.CopyTo(span.Slice(current, tag.Length));
-                    current += tag.Length;
-                    span[current++] = ' ';
-                }
-
-                return span[..current].ToString();
-            }
+            this.Queue.GoToTrack(this.CurrentTrackIndex);
         }
+    }
 
-        public GenresAndTagsViewModel GenresAndTags { get; }
-
-        public bool HasCurrentTrack => this.currentTrack != null;
-
-        public HistoryViewModel History { get; }
-
-        public ImageSource Image
+    public async void GetBusy(Task task, string description)
+    {
+        try
         {
-            get => this.imageSource;
-            set => this.SetProperty(ref this.imageSource, value);
+            this.BusyText = description;
+            await task;
         }
-
-        public bool IsBusy => this.BusyText != null;
-
-        public bool IsPlaying => this.mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
-
-        public bool IsPaused => !this.IsPlaying;
-
-        public MediaPlaybackList Playlist
+        finally
         {
-            get => this.playbackList;
-            set => SetProperty(ref this.playbackList, value);
+            this.BusyText = null;
         }
+    }
 
-        public QueueViewModel Queue { get; }
-
-        public int SelectedPane
-        {
-            get => this.selectedPane;
-            set
-            {
-                if (this.SetProperty(ref this.selectedPane, value))
-                {
-                    this.OnPropertyChanged(nameof(this.CanBuildPlaylist));
-                    this.OnPropertyChanged(nameof(this.CanSaveTags));
-                }
-            }
-        }
-
-        public SelectorsViewModel Selectors { get; }
-
-        private int CurrentTrackIndex => (int)this.playbackList.CurrentItemIndex;
-
-        private static UserSettings UserSettings => ((App)Application.Current).UserSettings;
-
-        public void BuildPlaylist()
-        {
-            this.GetBusy(this.BuildPlaylistAsync(), "Building Playlist");
-        }
-
-        public void ViewInQueue()
-        {
-            ShowPane(Pane.Queue);
-            if (this.HasCurrentTrack)
-            {
-                this.Queue.GoToTrack(this.CurrentTrackIndex);
-            }
-        }
-
-        public async void GetBusy(Task task, string description)
-        {
-            try
-            {
-                this.BusyText = description;
-                await task;
-            }
-            finally
-            {
-                this.BusyText = null;
-            }
-        }
-
-        public void MoveNext()
-        {
-            if (this.playbackList != null && this.CurrentTrackIndex < this.queue.Capacity - 1)
-                this.playbackList.MoveNext();
-        }
-
-        public void MovePrevious()
-        {
-            if (this.playbackList != null && this.CurrentTrackIndex > 0)
-                this.playbackList.MovePrevious();
-        }
-
-        public void OpenTilesPane()
-        {
-            this.Selectors.IsOpen = !this.Selectors.IsOpen;
-        }
-
-        public void Play()
-        {
-            ShowPane(Pane.Player);
-            this.mediaPlayer.Play();
-        }
-
-        public void PlayNext()
-        {
+    public void MoveNext()
+    {
+        if (this.playbackList != null && this.CurrentTrackIndex < this.queue.Capacity - 1)
             this.playbackList.MoveNext();
-            this.Play();
-        }
+    }
 
-        public void RewindToStart()
-        {
-            this.mediaPlayer.PlaybackSession.Position = TimeSpan.Zero;
-        }
+    public void MovePrevious()
+    {
+        if (this.playbackList != null && this.CurrentTrackIndex > 0)
+            this.playbackList.MovePrevious();
+    }
 
-        public void TogglePlayback()
-        {
-            var state = this.mediaPlayer.PlaybackSession.PlaybackState;
+    public void OpenTilesPane()
+    {
+        this.Selectors.IsOpen = !this.Selectors.IsOpen;
+    }
 
-            if (state == MediaPlaybackState.Playing)
-                this.mediaPlayer.Pause();
-            else
-                this.mediaPlayer.Play();
-        }
+    public void Play()
+    {
+        ShowPane(Pane.Player);
+        this.mediaPlayer.Play();
+    }
 
-        private static void AddToPlaylist(MediaPlaybackList playlist, IEnumerable<Track> tracks)
-        {
-            foreach (var track in tracks)
-            {
-                AddToPlaylist(playlist, track);
-            }
-        }
+    public void PlayNext()
+    {
+        this.playbackList.MoveNext();
+        this.Play();
+    }
 
-        private static void AddToPlaylist(MediaPlaybackList playlist, Track track)
-        {
-            var item = CreateMediaSource(track);
-            playlist.Items.Add(item);
-        }
+    public void RewindToStart()
+    {
+        this.mediaPlayer.PlaybackSession.Position = TimeSpan.Zero;
+    }
 
-        private static MediaPlaybackItem CreateMediaSource(Track track)
-        {
-            var item = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(track.File));
+    public void TogglePlayback()
+    {
+        var state = this.mediaPlayer.PlaybackSession.PlaybackState;
 
-            var props = item.GetDisplayProperties();
-            props.Type = Windows.Media.MediaPlaybackType.Music;
-            props.MusicProperties.Artist = track.Properties.Artist;
-            props.MusicProperties.Title = track.Properties.Title;
-            item.ApplyDisplayProperties(props);
-
-            return item;
-        }
-
-        private async Task BuildPlaylistAsync()
-        {
+        if (state == MediaPlaybackState.Playing)
             this.mediaPlayer.Pause();
+        else
+            this.mediaPlayer.Play();
+    }
 
-            if (this.Playlist != null) this.Playlist.CurrentItemChanged -= this.OnTrackChanged;
-            this.Playlist = null;
+    private static void AddToPlaylist(MediaPlaybackList playlist, Track track)
+    {
+        var item = CreateMediaSource(track);
+        playlist.Items.Add(item);
+    }
 
-            var tracks = await this.musicLibrary.LoadTracksAsync(this.GenresAndTags.SelectedGenres);
+    private static MediaPlaybackItem CreateMediaSource(Track track)
+    {
+        var item = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(track.File));
 
-            var builder = new PlaylistBuilder(tracks, this.appSettings)
-                .WithTimeOfDay(this.appState.TimeOfDay)
-                .WithWeather(this.appState.Weather)
-                .ExcludeTags(this.GenresAndTags.ExcludingTags)
-                .FilterByTags(this.GenresAndTags.FilterTags)
-                .WithOutOfRotationTimeSinceAdded(UserSettings.OutOfRotationDaysSinceAdded)
-                .WithOutOfRotationTimeSincePlayed(UserSettings.OutOfRotationDaysSincePlayed);
+        var props = item.GetDisplayProperties();
+        props.Type = Windows.Media.MediaPlaybackType.Music;
+        props.MusicProperties.Artist = track.Properties.Artist;
+        props.MusicProperties.Title = track.Properties.Title;
+        item.ApplyDisplayProperties(props);
 
-            var query = builder.Build().Shuffle().Take(this.appSettings.PlaylistSize);
+        return item;
+    }
 
-            UpdatePlaylist(query);
-            await UpdateImageAsync();
+    private async Task BuildPlaylistAsync()
+    {
+        this.mediaPlayer.Pause();
 
-            ShowPane(Pane.Player);
-        }
+        if (this.Playlist != null) this.Playlist.CurrentItemChanged -= this.OnTrackChanged;
+        this.Playlist = null;
 
-        private void Dispatch(Action action)
+        var tracks = await this.musicLibrary.LoadTracksAsync(this.GenresAndTags.SelectedGenres);
+
+        var builder = new PlaylistBuilder(tracks, this.appSettings)
+            .WithTimeOfDay(this.appState.TimeOfDay)
+            .WithWeather(this.appState.Weather)
+            .ExcludeTags(this.GenresAndTags.ExcludingTags)
+            .FilterByTags(this.GenresAndTags.FilterTags)
+            .WithOutOfRotationTimeSinceAdded(UserSettings.OutOfRotationDaysSinceAdded)
+            .WithOutOfRotationTimeSincePlayed(UserSettings.OutOfRotationDaysSincePlayed);
+
+        var query = builder.Build().Shuffle().Take(this.appSettings.PlaylistSize);
+
+        UpdatePlaylist(query);
+        await UpdateImageAsync();
+
+        ShowPane(Pane.Player);
+    }
+
+    private void Dispatch(Action action)
+    {
+        this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action());
+    }
+
+    private async void Initialize()
+    {
+        var imagePath = await this.imageManager.GetNextDefaultImage();
+        this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
+    }
+
+    private void OnQueueChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == NotifyCollectionChangedAction.Add && e.NewStartingIndex == this.queue.CurrentIndex + 1)
+            this.Playlist.Items[this.CurrentTrackIndex + 1] = CreateMediaSource(this.queue.Next);
+    }
+
+    private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
+    {
+        this.Dispatch(() =>
         {
-            this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action());
-        }
+            this.OnPropertyChanged(nameof(this.IsPlaying));
+            this.OnPropertyChanged(nameof(this.IsPaused));
+        });
+    }
 
-        private async void Initialize()
-        {
-            var imagePath = await this.imageManager.GetNextDefaultImage();
-            this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
-        }
+    private void OnPositionChanged(MediaPlaybackSession sender, object args)
+    {
+        if (this.CurrentTrackIndex < 0) return;
 
-        private void OnQueueChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Add && e.NewStartingIndex == this.queue.CurrentIndex + 1)
-                this.Playlist.Items[this.CurrentTrackIndex + 1] = CreateMediaSource(this.queue.Next);
-        }
+        var session = this.mediaPlayer.PlaybackSession;
 
-        private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
+        if (!this.listened && session.Position.TotalSeconds > session.NaturalDuration.TotalSeconds * 0.9)
         {
-            this.Dispatch(() =>
+            this.listened = true;
+            HistoryManager.Add(this.currentTrack);
+            this.Dispatch(() => this.History.Add(this.currentTrack));
+        }
+    }
+
+    private void OnTrackChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
+    {
+        this.listened = false;
+        var newIndex = this.CurrentTrackIndex;
+
+        if (newIndex < 0 || newIndex >= this.queue.Capacity) return;
+
+        this.Dispatch(() =>
+        {
+            this.CurrentTrack = this.queue[newIndex];
+
+            if (newIndex > this.queue.CurrentIndex)
             {
-                this.OnPropertyChanged(nameof(this.IsPlaying));
-                this.OnPropertyChanged(nameof(this.IsPaused));
-            });
-        }
+                this.queue.MoveNext();
 
-        private void OnPositionChanged(MediaPlaybackSession sender, object args)
-        {
-            if (this.CurrentTrackIndex < 0) return;
-
-            var session = this.mediaPlayer.PlaybackSession;
-
-            if (!this.listened && session.Position.TotalSeconds > session.NaturalDuration.TotalSeconds * 0.9)
-            {
-                this.listened = true;
-                HistoryManager.Add(this.currentTrack);
-                this.Dispatch(() => this.History.Add(this.currentTrack));
-            }
-        }
-
-        private void OnTrackChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
-        {
-            this.listened = false;
-            var newIndex = this.CurrentTrackIndex;
-
-            if (newIndex < 0 || newIndex >= this.queue.Capacity) return;
-
-            this.Dispatch(() =>
-            {
-                this.CurrentTrack = this.queue[newIndex];
-
-                if (newIndex > this.queue.CurrentIndex)
-                {
-                    this.queue.MoveNext();
-
-                    if (this.Playlist.Items.Count == this.queue.Count && this.queue.HasNext)
+                if (this.Playlist.Items.Count == this.queue.Count && this.queue.HasNext)
                     AddToPlaylist(this.Playlist, this.queue.Next);
-                }
-                else
-                {
-                    this.queue.MoveBack();
-                }
-            });
-        }
+            }
+            else
+            {
+                this.queue.MoveBack();
+            }
+        });
+    }
 
-        private void ShowPane(Pane pane) => this.SelectedPane = (int)pane;
+    private void ShowPane(Pane pane) => this.SelectedPane = (int)pane;
 
-        private async Task UpdateImageAsync()
-        {
-            var timeOfDay = this.Selectors.SelectedTimeOfDay ?? "";
-            var weather = this.Selectors.SelectedWeather ?? "";
-            var imagePath = await this.imageManager.GetNextImage(timeOfDay, weather);
-            this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
-        }
+    private async Task UpdateImageAsync()
+    {
+        var timeOfDay = this.Selectors.SelectedTimeOfDay ?? "";
+        var weather = this.Selectors.SelectedWeather ?? "";
+        var imagePath = await this.imageManager.GetNextImage(timeOfDay, weather);
+        this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
+    }
 
-        private void UpdatePlaylist(IEnumerable<Track> query)
-        {
-            this.queue.Reload(query);
+    private void UpdatePlaylist(IEnumerable<Track> query)
+    {
+        this.queue.Reload(query);
 
-            var playlist = new MediaPlaybackList();
-            AddToPlaylist(playlist, this.queue[0]);
+        var playlist = new MediaPlaybackList();
+        AddToPlaylist(playlist, this.queue[0]);
 
-            this.Playlist = playlist.Items.Any() ? playlist : null;
-            playlist.CurrentItemChanged += this.OnTrackChanged;
-        }
+        this.Playlist = playlist.Items.Any() ? playlist : null;
+        playlist.CurrentItemChanged += this.OnTrackChanged;
     }
 }

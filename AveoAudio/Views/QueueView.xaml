@@ -11,24 +11,7 @@
     VerticalContentAlignment="Stretch"
     x:Name="view">
 
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="TracklistResources.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </UserControl.Resources>
-
-    <Grid Background="{Binding Background, ElementName=view}">
-        <ListView x:Name="tracklist"
-            Margin="20 20 70 30" VerticalContentAlignment="Stretch"
-            ItemsSource="{x:Bind ViewModel.Queue, Mode=OneTime}"
-            SelectedItem="{x:Bind ViewModel.SelectedTrack, Mode=TwoWay}"
-            Style="{StaticResource Tracklist}"
-            DoubleTapped="{x:Bind ViewModel.Play}">
-        </ListView>
-
-        <Button Style="{StaticResource ScrollButton}" HorizontalAlignment="Right" Margin="15 10" VerticalAlignment="Top" Click="OnScrollToTop">&#xF0AD;</Button>
-        <Button Style="{StaticResource ScrollButton}" HorizontalAlignment="Right" Margin="15 30" VerticalAlignment="Bottom" Click="OnScrollToBottom">&#xF0AE;</Button>
-    </Grid>
+    <Border Background="{Binding Background, ElementName=view}">
+        <views:TracklistView DataContext="{x:Bind ViewModel}" Margin="20 20 10 20" />
+    </Border>
 </UserControl>

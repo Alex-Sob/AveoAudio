@@ -591,10 +591,6 @@
                                     Click="{x:Bind ViewModel.BuildPlaylist}"
                                     Style="{StaticResource BuildPlaylistButton}"
                                     Visibility="{x:Bind ViewModel.CanBuildPlaylist, Mode=OneWay}" />
-                                <Button
-                                    Click="{x:Bind ViewModel.History.SaveTags}"
-                                    Style="{StaticResource CommandBarButton}"
-                                    Visibility="{x:Bind ViewModel.CanSaveTags, Mode=OneWay}">&#xE74E;</Button>
                             </StackPanel>
                         </Pivot.RightHeader>
 

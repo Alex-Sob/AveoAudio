@@ -11,25 +11,11 @@
     VerticalContentAlignment="Stretch"
     x:Name="view">
 
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="TracklistResources.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </UserControl.Resources>
-
     <Grid Background="{Binding Background, ElementName=view}">
-        <ListView x:Name="tracklist"
-            Margin="20 50 50 30" VerticalContentAlignment="Stretch"
-            ItemsSource="{x:Bind ViewModel.History, Mode=OneTime}"
-            SelectedItem="{x:Bind ViewModel.SelectedTrack, Mode=TwoWay}"
-            Style="{StaticResource Tracklist}"
-            DoubleTapped="{x:Bind ViewModel.Play}">
-        </ListView>
+        <views:TracklistView DataContext="{x:Bind ViewModel}" Margin="20 50 10 20" />
 
         <Button
-            Margin="8" HorizontalAlignment="Right" VerticalAlignment="Top"
+            Margin="10 8" HorizontalAlignment="Right" VerticalAlignment="Top"
             Style="{StaticResource Button}"
             Click="{x:Bind ViewModel.Sync}">&#xedab;</Button>
     </Grid>

@@ -3,78 +3,86 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 
 using Windows.System;
 
-namespace AveoAudio.ViewModels
+namespace AveoAudio.ViewModels;
+
+public class TracklistViewModel : NotificationBase
 {
-    public class TracklistViewModel : NotificationBase
+    private readonly MainViewModel mainViewModel;
+    private readonly ListeningQueue queue;
+
+    private TrackViewModel selectedTrack;
+
+    public TracklistViewModel(ListeningQueue queue, MainViewModel mainViewModel)
     {
-        private readonly MainViewModel mainViewModel;
-        private readonly ListeningQueue queue;
+        this.queue = queue;
+        this.mainViewModel = mainViewModel;
 
-        private TrackViewModel selectedTrack;
+        this.TagGroups = CreateTagGroups();
+        this.CommonTags.AddRange(this.TagGroups.SelectMany(g => g).Select(t => t.Tag));
+    }
 
-        public TracklistViewModel(ListeningQueue queue, MainViewModel mainViewModel)
+    public HashSet<string> CommonTags { get; } = new(32);
+
+    public TrackViewModel EditingTagsFor { get; set; }
+
+    public TrackViewModel SelectedTrack
+    {
+        get => this.selectedTrack;
+        set
         {
-            this.queue = queue;
-            this.mainViewModel = mainViewModel;
+            if (this.selectedTrack != null) this.selectedTrack.IsSelected = false;
+            this.SetProperty(ref this.selectedTrack, value);
+            if (this.selectedTrack != null) this.selectedTrack.IsSelected = true;
+        }
+    }
 
-            this.PlayCommand = new DelegateCommand(this.Play);
-            this.EnqueueCommand = new DelegateCommand(this.Enqueue);
+    public ObservableCollection<TagGroup> TagGroups { get; }
+
+    public IList<TrackViewModel> Tracks { get; private set; } = new ObservableCollection<TrackViewModel>();
+
+    public void Enqueue() => this.queue.Enqueue(this.selectedTrack.Track);
+
+    public async void LaunchFolder()
+    {
+        var file = this.SelectedTrack.Track.File;
+        var folder = await file.GetParentAsync();
+
+        await Launcher.LaunchFolderAsync(folder, new FolderLauncherOptions { ItemsToSelect = { file } });
+    }
+
+    public void Play()
+    {
+        var index = this.Tracks.IndexOf(this.SelectedTrack);
+
+        if (index == this.queue.CurrentIndex)
+            this.mainViewModel.Play();
+        else if (index == this.queue.CurrentIndex + 1)
+            this.mainViewModel.PlayNext();
+        else
+        {
+            this.queue.AddNextUp(this.SelectedTrack.Track);
+            this.mainViewModel.PlayNext();
+        }
+    }
+
+    public void UpdateTags(Task task) => this.mainViewModel.GetBusy(task, "Updating tags");
+
+    private ObservableCollection<TagGroup> CreateTagGroups()
+    {
+        var groups = new List<TagGroup>(8);
+
+        foreach (var (name, tags) in App.Current.AppSettings.TagGroups)
+        {
+            groups.Add(new(name, tags, this));
         }
 
-        public ICommand EnqueueCommand { get; }
+        groups.Add(new("Time of day", Enum.GetNames<TimesOfDay>().AsSpan(1), this));
+        groups.Add(new("Weather", Enum.GetNames<Weather>().AsSpan(1), this));
+        groups.Add(new("Others"));
 
-        public ICommand PlayCommand { get; }
-
-        public TrackViewModel SelectedTrack
-        {
-            get => this.selectedTrack;
-            set
-            {
-                if (this.selectedTrack != null) this.selectedTrack.IsSelected = false;
-                this.SetProperty(ref this.selectedTrack, value);
-                if (this.selectedTrack != null) this.selectedTrack.IsSelected = true;
-            }
-        }
-
-        public IList<TrackViewModel> Tracks { get; private set; } = new ObservableCollection<TrackViewModel>();
-
-        public void Enqueue() => this.queue.Enqueue(this.selectedTrack.Track);
-
-        public async void LaunchFolder()
-        {
-            var file = this.SelectedTrack.Track.File;
-            var folder = await file.GetParentAsync();
-
-            await Launcher.LaunchFolderAsync(folder, new FolderLauncherOptions { ItemsToSelect = { file } });
-        }
-
-        public void Play()
-        {
-            var index = this.Tracks.IndexOf(this.SelectedTrack);
-
-            if (index == this.queue.CurrentIndex)
-                this.mainViewModel.Play();
-            else if (index == this.queue.CurrentIndex + 1)
-                this.mainViewModel.PlayNext();
-            else
-            {
-                this.queue.AddNextUp(this.SelectedTrack.Track);
-                this.mainViewModel.PlayNext();
-            }
-        }
-
-        public void SaveTags()
-        {
-            var tasks =
-                from editor in this.Tracks
-                where editor.HasChanges
-                select editor.Track.UpdateTags(editor.Value);
-
-            this.mainViewModel.GetBusy(Task.WhenAll(tasks), "Saving");
-        }
+        return [.. groups];
     }
 }

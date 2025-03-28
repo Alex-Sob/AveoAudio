@@ -1,37 +1,36 @@
 ﻿using System;
 
-namespace AveoAudio
+namespace AveoAudio;
+
+public readonly struct TagList
 {
-    public readonly struct TagList
+    private readonly string rawTags;
+
+    // TODO: Use Memory
+    public TagList(string rawTags) => this.rawTags = rawTags;
+
+    public static implicit operator string(TagList tagList) => tagList.rawTags;
+
+    public int Length => this.rawTags.Length;
+
+    public Enumerator GetEnumerator() => new(this.rawTags);
+
+    public ref struct Enumerator(string rawTags)
     {
-        private readonly string rawTags;
+        private int current;
 
-        // TODO: Use Memory
-        public TagList(string rawTags) => this.rawTags = rawTags;
+        public Tag Current { get; private set; }
 
-        public static implicit operator string(TagList tagList) => tagList.rawTags;
-
-        public int Length => this.rawTags.Length;
-
-        public Enumerator GetEnumerator() => new(this.rawTags);
-
-        public ref struct Enumerator(string rawTags)
+        public bool MoveNext()
         {
-            private int current;
+            if (current >= rawTags.Length) return false;
 
-            public ReadOnlySpan<char> Current { get; private set; }
+            var index = rawTags.IndexOf(',', current);
+            var length = index >= 0 ? index - current : rawTags.Length - current;
+            this.Current = new Tag(rawTags.AsSpan(current, length), current);
+            current += length + 1;
 
-            public bool MoveNext()
-            {
-                if (current >= rawTags.Length) return false;
-
-                var index = rawTags.IndexOf(',', current);
-                var length = index >= 0 ? index - current : rawTags.Length - current;
-                this.Current = rawTags.AsSpan(current, length);
-                current += length + 1;
-
-                return true;
-            }
+            return true;
         }
     }
 }

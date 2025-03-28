@@ -1,15 +1,17 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
-namespace AveoAudio
+namespace AveoAudio;
+
+public class AppSettings
 {
-    public class AppSettings
-    {
-        public int PlaylistSize { get; set; }
+    private string[] tags;
 
-        public int OlderTracksQuota { get; set; }
+    public int PlaylistSize { get; set; }
 
-        public IDictionary<string, Selector> Selectors { get; set; }
+    public IDictionary<string, Selector> Selectors { get; set; }
 
-        public IList<string> Tags { get; set; }
-    }
+    public IDictionary<string, string[]> TagGroups { get; set; }
+
+    public IReadOnlyList<string> Tags => tags ??= this.TagGroups.SelectMany(p => p.Value).ToArray();
 }
