@@ -331,6 +331,8 @@ namespace AveoAudio.ViewModels
                 if (newIndex > this.queue.CurrentIndex)
                 {
                     this.queue.MoveNext();
+
+                    if (this.Playlist.Items.Count == this.queue.Count && this.queue.HasNext)
                     AddToPlaylist(this.Playlist, this.queue.Next);
                 }
                 else
