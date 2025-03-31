@@ -9,7 +9,7 @@ public class AppSettings
 
     public int PlaylistSize { get; set; }
 
-    public IDictionary<string, Selector> Selectors { get; set; }
+    public IDictionary<string, FilterDefaults> FilterDefaults { get; set; }
 
     public IDictionary<string, string[]> TagGroups { get; set; }
 

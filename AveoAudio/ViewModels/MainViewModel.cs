@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.UI.Dispatching;
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 
@@ -25,7 +24,6 @@ public class MainViewModel : NotificationBase
     }
 
     private readonly AppSettings appSettings;
-    private readonly AppState appState = new();
     private readonly DispatcherQueue dispatcherQueue;
     private readonly ImageManager imageManager;
     private readonly MediaPlayer mediaPlayer;
@@ -49,16 +47,14 @@ public class MainViewModel : NotificationBase
         this.queue = new ListeningQueue(appSettings.PlaylistSize);
         this.imageManager = new ImageManager();
 
-        this.Selectors = new SelectorsViewModel(this.appState);
-        this.GenresAndTags = new GenresAndTagsViewModel(this.appState, this.appSettings);
+        this.Selectors = new SelectorsViewModel();
+        this.Filter = new FilterViewModel(this.Selectors, this.appSettings);
         this.Queue = new QueueViewModel(this.queue, this);
         this.History = new HistoryViewModel(this.queue, this);
 
         this.queue.CollectionChanged += this.OnQueueChanged;
         this.mediaPlayer.PlaybackSession.PositionChanged += this.OnPositionChanged;
         this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
-
-        this.Initialize();
     }
 
     public string BusyText
@@ -109,7 +105,7 @@ public class MainViewModel : NotificationBase
         }
     }
 
-    public GenresAndTagsViewModel GenresAndTags { get; }
+    public FilterViewModel Filter { get; }
 
     public bool HasCurrentTrack => this.currentTrack != null;
 
@@ -156,7 +152,7 @@ public class MainViewModel : NotificationBase
 
     public void BuildPlaylist()
     {
-        this.GetBusy(this.BuildPlaylistAsync(), "Building Playlist");
+        _ = this.GetBusy(this.BuildPlaylistAsync(), "Building Playlist");
     }
 
     public void ViewInQueue()
@@ -168,7 +164,7 @@ public class MainViewModel : NotificationBase
         }
     }
 
-    public async void GetBusy(Task task, string description)
+    public async Task GetBusy(Task task, string description)
     {
         try
         {
@@ -180,6 +176,8 @@ public class MainViewModel : NotificationBase
             this.BusyText = null;
         }
     }
+
+    public Task Initialize() => Task.WhenAll(this.Filter.Initialize(), InitializeImage());
 
     public void MoveNext()
     {
@@ -251,13 +249,13 @@ public class MainViewModel : NotificationBase
         if (this.Playlist != null) this.Playlist.CurrentItemChanged -= this.OnTrackChanged;
         this.Playlist = null;
 
-        var tracks = await this.musicLibrary.LoadTracksAsync(this.GenresAndTags.SelectedGenres);
+        var tracks = await this.musicLibrary.LoadTracksAsync(this.Filter.SelectedGenres);
 
         var builder = new PlaylistBuilder(tracks, this.appSettings)
-            .WithTimeOfDay(this.appState.TimeOfDay)
-            .WithWeather(this.appState.Weather)
-            .ExcludeTags(this.GenresAndTags.ExcludingTags)
-            .FilterByTags(this.GenresAndTags.FilterTags)
+            .WithTimeOfDay(this.Selectors.TimeOfDay)
+            .WithWeather(this.Selectors.Weather)
+            .ExcludeTags(this.Filter.ExcludeTags)
+            .FilterByTags(this.Filter.SelectedTags)
             .WithOutOfRotationTimeSinceAdded(UserSettings.OutOfRotationDaysSinceAdded)
             .WithOutOfRotationTimeSincePlayed(UserSettings.OutOfRotationDaysSincePlayed);
 
@@ -274,7 +272,7 @@ public class MainViewModel : NotificationBase
         this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action());
     }
 
-    private async void Initialize()
+    private async Task InitializeImage()
     {
         var imagePath = await this.imageManager.GetNextDefaultImage();
         this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
@@ -338,8 +336,8 @@ public class MainViewModel : NotificationBase
 
     private async Task UpdateImageAsync()
     {
-        var timeOfDay = this.Selectors.SelectedTimeOfDay ?? "";
-        var weather = this.Selectors.SelectedWeather ?? "";
+        var timeOfDay = this.Selectors.SelectedTimeOfDay;
+        var weather = this.Selectors.SelectedWeather;
         var imagePath = await this.imageManager.GetNextImage(timeOfDay, weather);
         this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
     }

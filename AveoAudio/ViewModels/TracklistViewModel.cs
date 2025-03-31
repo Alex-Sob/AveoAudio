@@ -68,8 +68,6 @@ public class TracklistViewModel : NotificationBase
         }
     }
 
-    public void UpdateTags(Task task) => this.mainViewModel.GetBusy(task, "Updating tags");
-
     private ObservableCollection<TagGroup> CreateTagGroups()
     {
         var groups = new List<TagGroup>(8);

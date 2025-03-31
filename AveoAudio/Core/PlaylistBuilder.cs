@@ -11,7 +11,7 @@ namespace AveoAudio
 
         public IEnumerable<Track> Build() => this.query;
 
-        public PlaylistBuilder ExcludeTags(ISet<string> tags)
+        public PlaylistBuilder ExcludeTags(ICollection<string> tags)
         {
             if (tags.Count == 0) return this;
 
@@ -20,7 +20,7 @@ namespace AveoAudio
             return this;
         }
 
-        public PlaylistBuilder FilterByTags(ISet<string> tags)
+        public PlaylistBuilder FilterByTags(ICollection<string> tags)
         {
             if (tags.Count == 0) return this;
 
@@ -68,7 +68,7 @@ namespace AveoAudio
             return this;
         }
 
-        private int CreateMask(ISet<string> tags)
+        private int CreateMask(ICollection<string> tags)
         {
             int bitMask = 1, result = 0;
 
