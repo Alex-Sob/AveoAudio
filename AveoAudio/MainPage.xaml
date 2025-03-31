@@ -595,9 +595,9 @@
                         </Pivot.RightHeader>
 
                         <PivotItem Header="Filter">
-                            <views:GenresAndTagsView
+                            <views:FilterView
                                 Background="{StaticResource OverlayBackground}"
-                                DataContext="{x:Bind ViewModel.GenresAndTags, Mode=OneTime}" />
+                                DataContext="{x:Bind ViewModel.Filter, Mode=OneTime}" />
                         </PivotItem>
 
                         <PivotItem

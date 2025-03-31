@@ -53,7 +53,7 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
         }
     }
 
-    public void UpdateTags() => this.Tracklist.UpdateTags(UpdateTagsAsync());
+    public void UpdateTags() => App.Current.GetBusy(UpdateTagsAsync(), "Updating tags");
 
     public void ToggleBestTimeOfDay(string tag)
     {
