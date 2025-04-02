@@ -346,10 +346,16 @@ public class MainViewModel : NotificationBase
     {
         this.queue.Reload(query);
 
+        if (!this.queue.HasNext)
+        {
+            this.Playlist = null;
+            return;
+        }
+
         var playlist = new MediaPlaybackList();
         AddToPlaylist(playlist, this.queue[0]);
 
-        this.Playlist = playlist.Items.Any() ? playlist : null;
+        this.Playlist = playlist;
         playlist.CurrentItemChanged += this.OnTrackChanged;
     }
 }
