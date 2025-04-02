@@ -1,82 +1,87 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Windows.Storage;
 
-namespace AveoAudio
+namespace AveoAudio;
+
+public class ImageManager
 {
-    // TODO: [Images] Seasons
-    // TODO: [Images] Provide UI to rotate image
-    public class ImageManager
+    private const string DefaultFolder = "Default";
+    private const string LibrarySubfolderName = nameof(AveoAudio);
+
+    private readonly Dictionary<string, ICollection<string>> imagesByFolder = [];
+
+    public async Task<string> GetNextDefaultImage()
     {
-        private const string DefaultFolder = "Default";
+        var appFolder = await GetLibrarySubfolder();
+        if (appFolder == null) return null;
 
-        private readonly Dictionary<string, (int, IList<StorageFile>)> imagesByFolder;
+        var defaultFolder = await appFolder.TryGetItemAsync(DefaultFolder) as StorageFolder;
+        return defaultFolder != null ? await GetNextImage(defaultFolder) : null;
+    }
 
-        public ImageManager()
+    public async Task<string> GetNextImage(string season, string timeOfDay, string weather)
+    {
+        var folder = await GetFolderByProbing(season, timeOfDay, weather);
+        return folder != null ? await this.GetNextImage(folder) : null;
+    }
+
+    private static async Task<StorageFolder> GetLibrarySubfolder()
+    {
+        return await KnownFolders.PicturesLibrary.GetFolderAsync(LibrarySubfolderName);
+    }
+
+    private static async Task<StorageFolder> GetFolderByProbing(string season, string timeOfDay, string weather)
+    {
+        var appFolder = await GetLibrarySubfolder();
+        if (appFolder == null) return null;
+
+        var folder = GetProbingFolders(appFolder.Path, season, timeOfDay, weather).FirstOrDefault(Directory.Exists);
+        return folder != null ? await StorageFolder.GetFolderFromPathAsync(folder) : null;
+    }
+
+    private static string GetNextImage(IReadOnlyList<StorageFile> files, ICollection<string> images)
+    {
+        var nextFile = files.Where(f => !images.Contains(f.Name)).Random();
+
+        if (nextFile != null)
         {
-            this.imagesByFolder = new();
+            images.Add(nextFile.Name);
+            return nextFile.Path;
         }
 
-        public async Task<string> GetNextDefaultImage()
-        {
-            // TODO: Copy default images first time if there are none
-            var folder = await KnownFolders.PicturesLibrary.TryGetItemAsync(DefaultFolder) as StorageFolder;
-            if (folder == null) return null;
+        return null;
+    }
 
-            return await this.GetNextImage(folder);
+    private static IEnumerable<string> GetProbingFolders(string path, string season, string timeOfDay, string weather)
+    {
+        yield return Path.Join(path, season, timeOfDay, weather);
+        yield return Path.Join(path, season, timeOfDay);
+        yield return Path.Join(path, DefaultFolder, timeOfDay, weather);
+        yield return Path.Join(path, DefaultFolder, timeOfDay);
+        yield return Path.Join(path, DefaultFolder);
+    }
+
+    private async Task<string> GetNextImage(StorageFolder folder)
+    {
+        var files = await folder.GetFilesAsync();
+
+        if (!this.imagesByFolder.TryGetValue(folder.Path, out var images))
+            this.imagesByFolder[folder.Path] = images = new HashSet<string>();
+
+        var next = GetNextImage(files, images);
+        if (next != null) return next;
+
+        if (images.Count > 0)
+        {
+            images.Clear();
+            return GetNextImage(files, images);
         }
 
-        public async Task<string> GetNextImage(string timeOfDay, string weather)
-        {
-            var folder = await GetFolder(timeOfDay, weather);
-
-            if (folder != null)
-            {
-                var nextImage = await this.GetNextImage(folder);
-                if (nextImage != null) return nextImage;
-            }
-
-            return await this.GetNextDefaultImage();
-        }
-
-        private static async Task<StorageFolder> GetFolder(string timeOfDay, string weather)
-        {
-            if (string.IsNullOrEmpty(timeOfDay)) return null;
-
-            var folder = await KnownFolders.PicturesLibrary.TryGetItemAsync(timeOfDay) as StorageFolder;
-            
-            if (folder == null) return null;
-            if (string.IsNullOrEmpty(weather)) return folder;
-
-            folder = await folder.TryGetItemAsync(weather) as StorageFolder;
-            if (folder != null) return folder;
-
-            return folder;
-        }
-
-        private async Task<string> GetNextImage(StorageFolder folder)
-        {
-            if (this.imagesByFolder.TryGetValue(folder.Path, out (int current, IList<StorageFile> images) pair))
-            {
-                var current = pair.current < pair.images.Count - 1 ? pair.current + 1 : 0;
-                this.imagesByFolder[folder.Path] = (current, pair.images);
-                return pair.images[current].Path;
-            }
-            else
-            {
-                var images = await folder.GetFilesAsync();
-                var randomizedImages = images.Shuffle().ToList();
-
-                if (randomizedImages.Any())
-                {
-                    this.imagesByFolder[folder.Path] = (0, randomizedImages);
-                    return randomizedImages[0].Path;
-                }
-            }
-
-            return null;
-        }
+        return null;
     }
 }

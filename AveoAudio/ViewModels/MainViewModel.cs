@@ -146,6 +146,8 @@ public class MainViewModel : NotificationBase
 
     public SelectorsViewModel Selectors { get; }
 
+    private static Season Season => (Season)(DateTime.Today.Month / 3 % 4);
+
     private int CurrentTrackIndex => (int)this.playbackList.CurrentItemIndex;
 
     private static UserSettings UserSettings => App.Current.UserSettings;
@@ -154,6 +156,8 @@ public class MainViewModel : NotificationBase
     {
         _ = this.GetBusy(this.BuildPlaylistAsync(), "Building Playlist");
     }
+
+    public void RefreshImage() => _ = UpdateImageAsync();
 
     public void ViewInQueue()
     {
@@ -338,7 +342,7 @@ public class MainViewModel : NotificationBase
     {
         var timeOfDay = this.Selectors.SelectedTimeOfDay;
         var weather = this.Selectors.SelectedWeather;
-        var imagePath = await this.imageManager.GetNextImage(timeOfDay, weather);
+        var imagePath = await this.imageManager.GetNextImage(Season.ToString(), timeOfDay, weather);
         this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
     }
 

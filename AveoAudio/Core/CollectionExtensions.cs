@@ -11,6 +11,26 @@ public static class CollectionExtensions
         foreach (var item in items) collection.Add(item);
     }
 
+    public static T Random<T>(this IEnumerable<T> source)
+    {
+        T result = default;
+        int min = int.MaxValue;
+        var random = new Random();
+
+        foreach (var item in source)
+        {
+            var number = random.Next();
+
+            if (number < min)
+            {
+                result = item;
+                min = number;
+            }
+        }
+
+        return result;
+    }
+
     public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
     {
         var random = new Random();
