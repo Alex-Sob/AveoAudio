@@ -1,0 +1,20 @@
+Functional:
+
+- History filter (+ file watcher?)
+- Library view (search + new music)
+- Best times of day
+- Queue compact view?
+
+Refactoring:
+
+- Tags enum type
+- Separate Player view
+
+Visuals:
+
+- Re-organize Filter
+- Tag editor layout
+- Seasons (button)
+- Tracklist scroll (show/hide)
+- Track icons (public/private, sun, best time)
+- Track box animation (Expander?)
