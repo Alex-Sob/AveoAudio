@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Windows.System;
 
@@ -20,7 +19,11 @@ public class TracklistViewModel : NotificationBase
         this.queue = queue;
         this.mainViewModel = mainViewModel;
 
+        var toggleTagCommand = new DelegateCommand<TagEditorItem>(t => EditingTagsFor.ToggleTag(t));
+
         this.TagGroups = CreateTagGroups();
+        this.TagsSelector = new TagsSelectorViewModel(this.TagGroups, toggleTagCommand);
+
         this.CommonTags.AddRange(this.TagGroups.SelectMany(g => g).Select(t => t.Tag));
     }
 
@@ -40,6 +43,8 @@ public class TracklistViewModel : NotificationBase
     }
 
     public ObservableCollection<TagGroup> TagGroups { get; }
+
+    public TagsSelectorViewModel TagsSelector { get; }
 
     public IList<TrackViewModel> Tracks { get; private set; } = new ObservableCollection<TrackViewModel>();
 
@@ -68,17 +73,23 @@ public class TracklistViewModel : NotificationBase
         }
     }
 
+    public void ToggleBestTimeOfDay(TagEditorItem item)
+    {
+        this.EditingTagsFor.ToggleBestTimeOfDay(item);
+        item.IsChecked = true;
+    }
+
     private ObservableCollection<TagGroup> CreateTagGroups()
     {
         var groups = new List<TagGroup>(8);
 
         foreach (var (name, tags) in App.Current.AppSettings.TagGroups)
         {
-            groups.Add(new(name, tags, this));
+            groups.Add(new(name, tags));
         }
 
-        groups.Add(new("Time of day", Enum.GetNames<TimesOfDay>().AsSpan(1), this));
-        groups.Add(new("Weather", Enum.GetNames<Weather>().AsSpan(1), this));
+        groups.Add(new("Time of day", Enum.GetNames<TimesOfDay>().AsSpan(1)));
+        groups.Add(new("Weather", Enum.GetNames<Weather>().AsSpan(1)));
         groups.Add(new("Others"));
 
         return [.. groups];

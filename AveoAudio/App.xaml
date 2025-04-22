@@ -79,6 +79,14 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+
+            <Style x:Key="ToggleTagButton" TargetType="ToggleButton">
+                <Setter Property="BorderBrush" Value="LightSkyBlue" />
+                <Setter Property="BorderThickness" Value="1.5" />
+                <Setter Property="CornerRadius" Value="15" />
+                <Setter Property="Foreground" Value="DarkSlateGray" />
+                <Setter Property="Padding" Value="10 3" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

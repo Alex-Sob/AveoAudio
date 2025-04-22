@@ -48,7 +48,7 @@ public class MainViewModel : NotificationBase
         this.imageManager = new ImageManager();
 
         this.Selectors = new SelectorsViewModel();
-        this.Filter = new FilterViewModel(this.Selectors, this.appSettings);
+        this.Filter = new FilterViewModel(this, this.Selectors, this.appSettings);
         this.Queue = new QueueViewModel(this.queue, this);
         this.History = new HistoryViewModel(this.queue, this);
 
@@ -66,10 +66,6 @@ public class MainViewModel : NotificationBase
                 this.OnPropertyChanged(nameof(this.IsBusy));
         }
     }
-
-    public bool CanBuildPlaylist => this.SelectedPane < (int)Pane.Queue;
-
-    public bool CanSaveTags => this.SelectedPane == (int)Pane.History;
 
     public Track CurrentTrack
     {
@@ -134,14 +130,7 @@ public class MainViewModel : NotificationBase
     public int SelectedPane
     {
         get => this.selectedPane;
-        set
-        {
-            if (this.SetProperty(ref this.selectedPane, value))
-            {
-                this.OnPropertyChanged(nameof(this.CanBuildPlaylist));
-                this.OnPropertyChanged(nameof(this.CanSaveTags));
-            }
-        }
+        set => this.SetProperty(ref this.selectedPane, value);
     }
 
     public SelectorsViewModel Selectors { get; }
@@ -150,11 +139,9 @@ public class MainViewModel : NotificationBase
 
     private int CurrentTrackIndex => (int)this.playbackList.CurrentItemIndex;
 
-    private static UserSettings UserSettings => App.Current.UserSettings;
-
-    public void BuildPlaylist()
+    public void RebuildPlaylist()
     {
-        _ = this.GetBusy(this.BuildPlaylistAsync(), "Building Playlist");
+        _ = this.GetBusy(this.RebuildPlaylistAsync(), "Building Playlist");
     }
 
     public void RefreshImage() => _ = UpdateImageAsync();
@@ -246,7 +233,7 @@ public class MainViewModel : NotificationBase
         return item;
     }
 
-    private async Task BuildPlaylistAsync()
+    private async Task RebuildPlaylistAsync()
     {
         this.mediaPlayer.Pause();
 
@@ -259,9 +246,10 @@ public class MainViewModel : NotificationBase
             .WithTimeOfDay(this.Selectors.TimeOfDay)
             .WithWeather(this.Selectors.Weather)
             .ExcludeTags(this.Filter.ExcludeTags)
-            .FilterByTags(this.Filter.SelectedTags)
-            .WithOutOfRotationTimeSinceAdded(UserSettings.OutOfRotationDaysSinceAdded)
-            .WithOutOfRotationTimeSincePlayed(UserSettings.OutOfRotationDaysSincePlayed);
+            .FilterByTags(this.Filter.FilterTags)
+            .ExcludeAlreadyPlayed(this.Filter.ExcludeAlreadyPlayed)
+            .WithOutOfRotationTimeSinceAdded(this.Filter.OutOfRotationDaysSinceAdded)
+            .WithOutOfRotationTimeSincePlayed(this.Filter.OutOfRotationDaysSincePlayed);
 
         var query = builder.Build().Shuffle().Take(this.appSettings.PlaylistSize);
 

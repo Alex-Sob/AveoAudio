@@ -32,7 +32,7 @@ public class MusicLibrary
         return result;
     }
 
-    public async Task<IEnumerable<Track>> LoadTracksAsync(IEnumerable<string> genres)
+    public async Task<IEnumerable<Track>> LoadTracksAsync(ICollection<string> genres)
     {
         var folders = await KnownFolders.MusicLibrary.GetFoldersAsync().AsTask().ConfigureAwait(false);
 

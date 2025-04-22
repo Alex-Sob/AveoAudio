@@ -10,12 +10,12 @@ public class TagGroup(string name) : IEnumerable<TagEditorItem>
 
     public IList<TagEditorItem> Tags { get; } = [];
 
-    public TagGroup(string name, ReadOnlySpan<string> tags, TracklistViewModel tracklist) : this(name)
+    public TagGroup(string name, ReadOnlySpan<string> tags) : this(name)
     {
         this.Tags = new TagEditorItem[tags.Length];
         
         for (int i = 0; i < tags.Length; i++)
-            this.Tags[i] = new(tags[i], tracklist);
+            this.Tags[i] = new(tags[i]);
     }
 
     public IEnumerator<TagEditorItem> GetEnumerator() => Tags.GetEnumerator();

@@ -170,41 +170,7 @@
                             Text="{Binding Tags, Mode=TwoWay, UpdateSourceTrigger=LostFocus}">
                             <FlyoutBase.AttachedFlyout>
                                 <Flyout Placement="BottomEdgeAlignedLeft" Opening="{x:Bind EditTags}">
-                                    <StackPanel>
-                                        <ItemsControl ItemsSource="{Binding Source={StaticResource TagGroups}}">
-                                            <ItemsControl.GroupStyle>
-                                                <GroupStyle>
-                                                    <GroupStyle.ContainerStyle>
-                                                        <Style TargetType="GroupItem">
-                                                            <Setter Property="Margin" Value="0 0 0 10" />
-                                                            <!-- Use Grid in the Template and set Grid.Column in HeaderTemplate/ItemTemplate -->
-                                                        </Style>
-                                                    </GroupStyle.ContainerStyle>
-                                                    <GroupStyle.HeaderTemplate>
-                                                        <DataTemplate>
-                                                            <TextBlock Foreground="Gray" Margin="0 0 0 5" Text="{Binding Name}" />
-                                                        </DataTemplate>
-                                                    </GroupStyle.HeaderTemplate>
-                                                    <GroupStyle.Panel>
-                                                        <ItemsPanelTemplate>
-                                                            <StackPanel Orientation="Horizontal" />
-                                                        </ItemsPanelTemplate>
-                                                    </GroupStyle.Panel>
-                                                </GroupStyle>
-                                            </ItemsControl.GroupStyle>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="viewModels:TagEditorItem">
-                                                    <ToggleButton
-                                                        Margin="0 0 5 0"
-                                                        Content="{Binding}"
-                                                        IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                                        Style="{StaticResource TagButton}"
-                                                        RightTapped="{x:Bind ToggleBestTimeOfDay}" 
-                                                        Tapped="{x:Bind ToggleTag}" />
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
+                                    <views:TagsSelectorView DataContext="{x:Bind Tracklist.TagsSelector}" RightTapped="OnTagsViewRightTapped" />
                                 </Flyout>
                             </FlyoutBase.AttachedFlyout>
                         </TextBox>

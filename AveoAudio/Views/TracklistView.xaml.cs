@@ -2,6 +2,9 @@ using AveoAudio.ViewModels;
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 
 using System.ComponentModel;
 using System.Linq;
@@ -21,7 +24,7 @@ public sealed partial class TracklistView : UserControl
     private void OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
         if (this.ViewModel != null) this.ViewModel.PropertyChanged -= this.OnViewModelPropertyChanged;
-        this.ViewModel = this.DataContext as QueueViewModel;
+        this.ViewModel = this.DataContext as TracklistViewModel;
         if (this.ViewModel != null) this.ViewModel.PropertyChanged += this.OnViewModelPropertyChanged;
     }
 
@@ -39,5 +42,28 @@ public sealed partial class TracklistView : UserControl
     private void OnScrollToTop(object sender, RoutedEventArgs e)
     {
         if (this.tracklist.Items.Count > 0) this.tracklist.ScrollIntoView(this.tracklist.Items.First());
+    }
+
+    private void OnTagsViewRightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        var toggleButton = FindAncestor<ToggleButton>((DependencyObject)e.OriginalSource);
+
+        if (toggleButton != null)
+        {
+            this.ViewModel.ToggleBestTimeOfDay((TagEditorItem)toggleButton.DataContext);
+            e.Handled = true;
+        }
+    }
+
+    private static T FindAncestor<T>(DependencyObject obj)
+    {
+        var parent = VisualTreeHelper.GetParent(obj);
+
+        for (; parent != null; parent = VisualTreeHelper.GetParent(parent))
+        {
+            if (parent is T result) return result;
+        }
+
+        return default;
     }
 }

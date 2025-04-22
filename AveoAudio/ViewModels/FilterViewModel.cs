@@ -8,67 +8,87 @@ namespace AveoAudio.ViewModels;
 
 public class FilterViewModel : NotificationBase
 {
+    private readonly MainViewModel mainViewModel;
     private readonly SelectorsViewModel selectors;
     private readonly AppSettings settings;
 
-    public FilterViewModel(SelectorsViewModel selectors, AppSettings settings)
+    public FilterViewModel(MainViewModel mainViewModel, SelectorsViewModel selectors, AppSettings settings)
     {
+        this.mainViewModel = mainViewModel;
         this.selectors = selectors;
         this.settings = settings;
 
-        this.ToggleExcludeTagCommand = new DelegateCommand<string>(t => ToggleValue(this.ExcludeTags, t));
-        this.ToggleFilterTagCommand = new DelegateCommand<string>(t => ToggleValue(this.SelectedTags, t));
         this.ToggleGenreCommand = new DelegateCommand<string>(g => ToggleValue(this.SelectedGenres, g));
+
+        this.FilterTagsSelector = CreateTagsSelector(this.FilterTags);
+        this.ExcludeTagsSelector = CreateTagsSelector(this.ExcludeTags);
 
         this.selectors.PropertyChanged += this.OnAppStateChanged;
     }
 
+    public bool ExcludeAlreadyPlayed => this.SuggestIfLastPlayed == "no";
+
     public ICollection<string> ExcludeTags { get; } = new HashSet<string>(16);
 
-    public ICollection<string> SelectedTags { get; } = new HashSet<string>();
+    public TagsSelectorViewModel ExcludeTagsSelector { get; private set; }
+
+    public bool FilterByDateAdded { get; set; }
+
+    public bool FilterByDatePlayed { get; set; }
+
+    public ICollection<string> FilterTags { get; } = new HashSet<string>();
+
+    public TagsSelectorViewModel FilterTagsSelector { get; private set; }
 
     public IReadOnlyList<string> Genres { get; private set; }
 
-    public string OutOfRotationDaysSinceAdded
+    public int OutOfRotationDaysSinceAdded => this.FilterByDateAdded ? GetOutOfRotationDays(this.SuggestIfAdded) : 0;
+
+    public int OutOfRotationDaysSincePlayed
     {
-        get => this.UserSettings.OutOfRotationDaysSinceAdded.ToString();
-        set => this.UserSettings.OutOfRotationDaysSinceAdded = Convert.ToInt32(value);
+        get => this.FilterByDatePlayed && this.SuggestIfLastPlayed != "no" ? GetOutOfRotationDays(this.SuggestIfLastPlayed) : 0;
     }
 
-    public string OutOfRotationDaysSincePlayed
-    {
-        get => this.UserSettings.OutOfRotationDaysSincePlayed.ToString();
-        set => this.UserSettings.OutOfRotationDaysSincePlayed = Convert.ToInt32(value);
-    }
+    public string SuggestIfAdded { get; set; } = "1y";
+
+    public string SuggestIfLastPlayed { get; set; } = "0.5y";
 
     public ICollection<string> SelectedGenres { get; } = new HashSet<string>(16);
 
-    public IReadOnlyList<string> Tags { get; private set; }
-
-    public ICommand ToggleExcludeTagCommand { get; private set; }
-
-    public ICommand ToggleFilterTagCommand { get; private set; }
-
     public ICommand ToggleGenreCommand { get; private set; }
-
-    private UserSettings UserSettings => App.Current.UserSettings;
 
     public Task Configure() => SettingsManager.OpenLocalSettings();
 
-    public bool ExcludesTag(string tag) => this.ExcludeTags.Contains(tag);
-
     public bool HasGenre(string genre) => this.SelectedGenres.Contains(genre);
-
-    public bool HasFilterTag(string tag) => this.SelectedTags.Contains(tag);
 
     public async Task Initialize()
     {
-        this.Tags = this.settings.Tags;
-
         this.Genres = await MusicLibrary.GetGenres();
         this.OnPropertyChanged(nameof(this.Genres));
 
         this.ApplyDefaults();
+    }
+
+    public void RebuildPlaylist() => this.mainViewModel.RebuildPlaylist();
+
+    private static int GetOutOfRotationDays(string value) => (int)double.Parse(value.AsSpan()[..^1]) * 365;
+
+    private static ICollection<TagGroup> CreateTagGroups()
+    {
+        var groups = new List<TagGroup>(8);
+
+        foreach (var (name, tags) in App.Current.AppSettings.TagGroups)
+        {
+            groups.Add(new(name, tags));
+        }
+
+        return groups;
+    }
+
+    private static TagsSelectorViewModel CreateTagsSelector(ICollection<string> selectedTags)
+    {
+        var toggleTagCommand = new DelegateCommand<TagEditorItem>(t => ToggleValue(selectedTags, t));
+        return new(CreateTagGroups(), toggleTagCommand);
     }
 
     private static void ToggleValue(ICollection<string> collection, string value)
@@ -88,7 +108,7 @@ public class FilterViewModel : NotificationBase
     {
         if (this.settings.FilterDefaults == null) return;
 
-        this.SelectedTags.Clear();
+        this.FilterTags.Clear();
         this.ExcludeTags.Clear();
         this.SelectedGenres.Clear();
 
@@ -96,8 +116,9 @@ public class FilterViewModel : NotificationBase
         ApplyDefaults(this.selectors.Weather);
 
         this.OnPropertyChanged(nameof(this.HasGenre));
-        this.OnPropertyChanged(nameof(this.HasFilterTag));
-        this.OnPropertyChanged(nameof(this.ExcludesTag));
+
+        this.FilterTagsSelector.SelectTags(this.FilterTags);
+        this.ExcludeTagsSelector.SelectTags(this.ExcludeTags);
     }
 
     private void ApplyDefaults<TEnum>(TEnum? value) where TEnum : struct
@@ -105,7 +126,7 @@ public class FilterViewModel : NotificationBase
         this.settings.FilterDefaults.TryGetValue(value?.ToString() ?? "", out FilterDefaults defaults);
 
         this.SelectedGenres.AddRange(defaults?.Genres ?? []);
-        this.SelectedTags.AddRange(defaults?.Tags ?? []);
+        this.FilterTags.AddRange(defaults?.Tags ?? []);
         this.ExcludeTags.AddRange(defaults?.ExcludeTags ?? []);
     }
 }

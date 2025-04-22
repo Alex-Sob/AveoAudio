@@ -1,0 +1,49 @@
+<UserControl
+    x:Class="AveoAudio.Views.TagsSelectorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AveoAudio.Views"
+    xmlns:viewModels="using:AveoAudio.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Name="view">
+
+    <UserControl.Resources>
+        <CollectionViewSource x:Key="TagGroups" Source="{Binding TagGroups}" IsSourceGrouped="True" />
+    </UserControl.Resources>
+
+    <ItemsControl ItemsSource="{Binding Source={StaticResource TagGroups}}">
+        <ItemsControl.GroupStyle>
+            <GroupStyle>
+                <GroupStyle.ContainerStyle>
+                    <Style TargetType="GroupItem">
+                        <Setter Property="Margin" Value="0 0 0 10" />
+                        <!-- Use Grid in the Template and set Grid.Column in HeaderTemplate/ItemTemplate -->
+                    </Style>
+                </GroupStyle.ContainerStyle>
+                <GroupStyle.HeaderTemplate>
+                    <DataTemplate>
+                        <TextBlock Foreground="Gray" Margin="0 0 0 5" Text="{Binding Name}" />
+                    </DataTemplate>
+                </GroupStyle.HeaderTemplate>
+                <GroupStyle.Panel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </GroupStyle.Panel>
+            </GroupStyle>
+        </ItemsControl.GroupStyle>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="viewModels:TagEditorItem">
+                <ToggleButton
+                    Margin="0 0 5 0"
+                    Command="{Binding DataContext.ToggleTagCommand, ElementName=view}"
+                    CommandParameter="{x:Bind}"
+                    Content="{x:Bind}"
+                    IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                    Style="{StaticResource ToggleTagButton}" />
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

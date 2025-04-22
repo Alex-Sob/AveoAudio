@@ -35,8 +35,6 @@ public partial class App : Application
 
     public AppSettings AppSettings { get; private set; }
 
-    public UserSettings UserSettings { get; } = new();
-
     /// <summary>
     /// Invoked when the application is launched.
     /// </summary>

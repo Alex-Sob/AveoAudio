@@ -417,7 +417,7 @@
         </Style>
 
         <Style TargetType="PivotHeaderItem">
-            <Setter Property="Foreground" Value="#FFEBEBEB"/>
+            <Setter Property="Foreground" Value="WhiteSmoke"/>
             <Setter Property="Height" Value="{StaticResource TileSize}"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -584,16 +584,6 @@
                     </Grid.RowDefinitions>
 
                     <Pivot Style="{StaticResource Pivot}" ItemContainerStyle="{StaticResource PivotItem}" SelectedIndex="{x:Bind ViewModel.SelectedPane, Mode=TwoWay}">
-                        <Pivot.RightHeader>
-                            <StackPanel Background="{StaticResource PivotHeaderBackground}" Orientation="Horizontal">
-                                <Border Background="WhiteSmoke" Margin="0 2" Width="1" />
-                                <Button
-                                    Click="{x:Bind ViewModel.BuildPlaylist}"
-                                    Style="{StaticResource BuildPlaylistButton}"
-                                    Visibility="{x:Bind ViewModel.CanBuildPlaylist, Mode=OneWay}" />
-                            </StackPanel>
-                        </Pivot.RightHeader>
-
                         <PivotItem Header="Filter">
                             <views:FilterView
                                 Background="{StaticResource OverlayBackground}"

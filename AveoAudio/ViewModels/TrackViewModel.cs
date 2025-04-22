@@ -82,7 +82,7 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
 
         foreach (var tag in this.tagsBuilder.Tags)
         {
-            if (!alternate.Contains(tag)) others.Tags.Add(new(tag.ToString(), this.Tracklist));
+            if (!alternate.Contains(tag)) others.Tags.Add(new(tag.ToString()));
         }
 
         this.Tracklist.TagGroups[^1] = others;

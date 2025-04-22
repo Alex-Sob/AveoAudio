@@ -32,7 +32,7 @@ public class ImageManager
 
     private static async Task<StorageFolder> GetLibrarySubfolder()
     {
-        return await KnownFolders.PicturesLibrary.GetFolderAsync(LibrarySubfolderName);
+        return await KnownFolders.PicturesLibrary.TryGetItemAsync(LibrarySubfolderName) as StorageFolder;
     }
 
     private static async Task<StorageFolder> GetFolderByProbing(string season, string timeOfDay, string weather)
@@ -40,7 +40,10 @@ public class ImageManager
         var appFolder = await GetLibrarySubfolder();
         if (appFolder == null) return null;
 
-        var folder = GetProbingFolders(appFolder.Path, season, timeOfDay, weather).FirstOrDefault(Directory.Exists);
+        var folder =
+            GetProbingFolders(appFolder.Path, season, timeOfDay, weather)
+            .FirstOrDefault(f => Directory.Exists(f) && Directory.EnumerateFiles(f).Any());
+
         return folder != null ? await StorageFolder.GetFolderFromPathAsync(folder) : null;
     }
 
