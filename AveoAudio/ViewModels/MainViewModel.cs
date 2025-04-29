@@ -52,6 +52,7 @@ public class MainViewModel : NotificationBase
         this.Queue = new QueueViewModel(this.queue, this);
         this.History = new HistoryViewModel(this.queue, this);
 
+        Track.TagsUpdated += OnTagsUpdated;
         this.queue.CollectionChanged += this.OnQueueChanged;
         this.mediaPlayer.PlaybackSession.PositionChanged += this.OnPositionChanged;
         this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
@@ -296,6 +297,14 @@ public class MainViewModel : NotificationBase
             this.listened = true;
             HistoryManager.Add(this.currentTrack);
             this.Dispatch(() => this.History.Add(this.currentTrack));
+        }
+    }
+
+    private void OnTagsUpdated(object sender, TrackEventArgs e)
+    {
+        for (int i = 0; i < this.queue.Count; i++)
+        {
+            if (this.queue[i] == e.Track) this.Playlist.Items[i] = CreateMediaSource(e.Track);
         }
     }
 

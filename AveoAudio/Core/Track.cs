@@ -38,6 +38,8 @@ public class Track
 
     public Weather Weather { get; internal set; }
 
+    public static event EventHandler<TrackEventArgs> TagsUpdated;
+
     public static async Task<Track> Load(StorageFile file, string genre)
     {
         var props = await file.Properties.GetMusicPropertiesAsync().AsTask().ConfigureAwait(false);
@@ -61,7 +63,8 @@ public class Track
     public async Task UpdateTags(string rawTags)
     {
         this.Properties.Subtitle = $"{this.DateAdded:dd.MM.yyyy};{rawTags}";
-        await this.Properties.SavePropertiesAsync().AsTask().ConfigureAwait(false);
+        await this.Properties.SavePropertiesAsync();
         parser.ParseTags(this, rawTags);
+        TagsUpdated?.Invoke(null, new TrackEventArgs(this));
     }
 }

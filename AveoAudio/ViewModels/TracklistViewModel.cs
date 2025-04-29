@@ -25,6 +25,8 @@ public class TracklistViewModel : NotificationBase
         this.TagsSelector = new TagsSelectorViewModel(this.TagGroups, toggleTagCommand);
 
         this.CommonTags.AddRange(this.TagGroups.SelectMany(g => g).Select(t => t.Tag));
+
+        Track.TagsUpdated += OnTagsUpdated;
     }
 
     public HashSet<string> CommonTags { get; } = new(32);
@@ -93,5 +95,13 @@ public class TracklistViewModel : NotificationBase
         groups.Add(new("Others"));
 
         return [.. groups];
+    }
+
+    private void OnTagsUpdated(object sender, TrackEventArgs e)
+    {
+        foreach (var trackViewModel in this.Tracks)
+        {
+            if (trackViewModel.Track == e.Track) trackViewModel.Tags = e.Track.Tags;
+        }
     }
 }
