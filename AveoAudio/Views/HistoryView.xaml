@@ -4,6 +4,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
     xmlns:viewModels="using:AveoAudio.ViewModels"
     xmlns:views="using:AveoAudio.Views"
     mc:Ignorable="d"
@@ -11,12 +12,91 @@
     VerticalContentAlignment="Stretch"
     x:Name="view">
 
+    <UserControl.Resources>
+        <Style x:Key="SplitButtonStyle" TargetType="SplitButton">
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="FocusVisualMargin" Value="-1" />
+            <Setter Property="Foreground" Value="SteelBlue" />
+            <Setter Property="IsTabStop" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="SplitButton">
+                        <StackPanel x:Name="RootGrid" Orientation="Horizontal">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+
+                                    <VisualState x:Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="RootGrid.Background" Value="Transparent" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="FlyoutOpen" />
+                                    <VisualState x:Name="TouchPressed" />
+                                    <VisualState x:Name="PrimaryPointerOver" />
+                                    <VisualState x:Name="PrimaryPressed" />
+                                    <VisualState x:Name="SecondaryPointerOver" />
+                                    <VisualState x:Name="SecondaryPressed" />
+
+                                    <VisualState x:Name="Checked" />
+                                    <VisualState x:Name="CheckedFlyoutOpen" />
+                                    <VisualState x:Name="CheckedTouchPressed" />
+                                    <VisualState x:Name="CheckedPrimaryPointerOver" />
+                                    <VisualState x:Name="CheckedPrimaryPressed" />
+                                    <VisualState x:Name="CheckedSecondaryPointerOver" />
+                                    <VisualState x:Name="CheckedSecondaryPressed" />
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="SecondaryButtonPlacementStates">
+                                    <VisualState x:Name="SecondaryButtonRight" />
+                                    <VisualState x:Name="SecondaryButtonSpan" />
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Button x:Name="PrimaryButton" Style="{StaticResource Button}" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Command="{TemplateBinding Command}" CommandParameter="{TemplateBinding CommandParameter}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" IsTabStop="False" Padding="{TemplateBinding Padding}" />
+                            <Button x:Name="SecondaryButton" Foreground="{TemplateBinding Foreground}" IsTabStop="False" Background="Transparent" BorderThickness="0" Padding="0">
+                                <Button.Content>
+                                    <AnimatedIcon Height="16" Width="16">
+                                        <animatedvisuals:AnimatedChevronDownSmallVisualSource />
+                                        <AnimatedIcon.FallbackIconSource>
+                                            <FontIconSource FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="8" Glyph="&#xE96E;" IsTextScaleFactorEnabled="False" />
+                                        </AnimatedIcon.FallbackIconSource>
+                                    </AnimatedIcon>
+                                </Button.Content>
+                            </Button>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RefreshButtonStyle" TargetType="SplitButton" BasedOn="{StaticResource SplitButtonStyle}">
+            <Setter Property="Content" Value="&#xe72c;" />
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="19" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Padding" Value="9" />
+        </Style>
+    </UserControl.Resources>
+
     <Grid Background="{Binding Background, ElementName=view}">
         <views:TracklistView DataContext="{x:Bind ViewModel}" Margin="20 50 10 20" />
 
-        <Button
-            Margin="10 8" HorizontalAlignment="Right" VerticalAlignment="Top"
-            Style="{StaticResource Button}"
-            Click="{x:Bind ViewModel.Sync}">&#xedab;</Button>
+        <StackPanel Orientation="Horizontal" Margin="10 8" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <SplitButton Margin="10 0" Style="{StaticResource RefreshButtonStyle}" Click="{x:Bind ViewModel.Load}">
+                <SplitButton.Flyout>
+                    <Flyout>
+                        <ListView SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.Period, Mode=TwoWay}">
+                            <ListViewItem Tag="1w">1 week</ListViewItem>
+                            <ListViewItem Tag="2w">2 weeks</ListViewItem>
+                            <ListViewItem Tag="1m">1 month</ListViewItem>
+                            <ListViewItem Tag="2m">2 months</ListViewItem>
+                            <ListViewItem Tag="3m">3 months</ListViewItem>
+                            <ListViewItem Tag="6m">6 months</ListViewItem>
+                        </ListView>
+                    </Flyout>
+                </SplitButton.Flyout>
+            </SplitButton>
+            <Button Style="{StaticResource Button}" Click="{x:Bind ViewModel.Sync}">&#xedab;</Button>
+        </StackPanel>
     </Grid>
 </UserControl>

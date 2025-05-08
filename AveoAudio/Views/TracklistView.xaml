@@ -6,6 +6,7 @@
     xmlns:viewModels="using:AveoAudio.ViewModels"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="using:System"
     mc:Ignorable="d">
 
     <UserControl.Resources>
@@ -14,9 +15,8 @@
             <SolidColorBrush x:Key="ScrollButtonBrush" Color="DarkGray" />
             <SolidColorBrush x:Key="ScrollButtonActiveBrush" Color="Gray" />
             <SolidColorBrush x:Key="TrackButtonActiveBrush" Color="White" />
-            <SolidColorBrush x:Key="TrackInfoTextBrush" Color="Gray" />
+            <SolidColorBrush x:Key="TrackInfoTextBrush" Color="SlateGray" />
 
-            <views:DateConverter x:Key="DateConverter" />
             <views:BoolToStringConverter x:Key="BoolToColumnSpanConverter" TrueValue="1" FalseValue="2" />
 
             <CollectionViewSource x:Key="TagGroups" Source="{Binding TagGroups}" IsSourceGrouped="True" />
@@ -161,9 +161,11 @@
                             Visibility="{Binding IsSelected}"
                             Click="{x:Bind Tracklist.Play}" />
 
-                        <TextBlock
-                            Grid.Column="1" Margin="10 0" VerticalAlignment="Center"
-                            Text="{Binding Track.FileName, Mode=OneTime}" TextWrapping="Wrap" />
+                        <!-- Use WrapPanel, play icon edb5 -->
+                        <TextBlock Grid.Column="1" Margin="10 0" VerticalAlignment="Center" TextWrapping="Wrap">
+                            <Run Text="{x:Bind Track.Name}" />
+                            <Run Text="{x:Bind sys:String.Format(x:Null, '   {0:m}', DatePlayed), Mode=OneWay}" FontStyle="Italic" Foreground="SteelBlue" />
+                        </TextBlock>
 
                         <TextBox
                             Grid.Column="2" Grid.ColumnSpan="{Binding HasChanges, Converter={StaticResource BoolToColumnSpanConverter}}" VerticalAlignment="Center"
@@ -180,9 +182,11 @@
                             Visibility="{Binding HasChanges}"
                             Click="{x:Bind UpdateTags}" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="1" Margin="10 0" Foreground="{StaticResource TrackInfoTextBrush}" VerticalAlignment="Center" Visibility="{Binding IsSelected}">
-                            <Run Text="{Binding Track.Genre, Mode=OneTime}" /> | <Run Text="{Binding Track.DateAdded, Mode=OneTime, Converter={StaticResource DateConverter}, ConverterParameter=dd.MM.yyyy}" />
-                        </TextBlock>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="10 0" Orientation="Horizontal" Visibility="{Binding IsSelected}">
+                            <TextBlock Foreground="{StaticResource TrackInfoTextBrush}" Text="{x:Bind Track.Genre}" />
+                            <TextBlock Foreground="{StaticResource TrackInfoTextBrush}" Text="&#xe710;" FontFamily="Segoe Fluent Icons" FontSize="10" Margin="10 0 1 0" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{StaticResource TrackInfoTextBrush}" Text="{x:Bind Track.DateAdded.ToString('dd.MM.yyyy', x:Null)}" />
+                        </StackPanel>
 
                         <Button
                             Grid.Column="4" HorizontalAlignment="Right"

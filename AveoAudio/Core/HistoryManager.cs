@@ -36,7 +36,29 @@ namespace AveoAudio
         {
             var dates = GetLocalDates(track);
             DateTimeOffset[] newDates = [.. dates, DateTimeOffset.Now.TruncateTime()];
-            Container.Values[track.FileName] = newDates;
+            Container.Values[track.Name] = newDates;
+        }
+
+        public static async Task<IEnumerable<(Track Track, DateTime Date)>> Load(DateTime startDate, DateTime endDate)
+        {
+            var names = new List<string>(32);
+
+            foreach (var (name, value) in Container.Values)
+            {
+                var dates = GetLocalDates(value);
+                if (dates[^1] >= startDate && dates[0] <= endDate) names.Add(name);
+            }
+
+            await MusicLibrary.Current.LoadByNamesAsync(names).ConfigureAwait(false);
+
+            return from name in names
+                   let track = MusicLibrary.Current.GetByName(name)
+                   where track != null
+                   let dates = GetLocalDates(Container.Values[name])
+                   from date in dates
+                   where date >= startDate && date <= endDate
+                   orderby date descending
+                   select (track, date.Date);
         }
 
         public static async Task Sync()
@@ -55,10 +77,10 @@ namespace AveoAudio
             {
                 var hashSet = new HashSet<DateTimeOffset>(10);
 
-                foreach (var setting in settings)
+                foreach (var (name, dates) in settings)
                 {
-                    var localDates = GetLocalDates(setting.Value);
-                    SyncTrackHistory(setting.Key, localDates, history, hashSet);
+                    var localDates = GetLocalDates(dates);
+                    SyncTrackHistory(name, localDates, history, hashSet);
                 }
 
                 foreach (var entry in history)
@@ -75,7 +97,7 @@ namespace AveoAudio
             JsonSerializer.Serialize(stream, history, options);
         }
 
-        private static DateTimeOffset[] GetLocalDates(Track track) => GetLocalDates(Container.Values[track.FileName]);
+        private static DateTimeOffset[] GetLocalDates(Track track) => GetLocalDates(Container.Values[track.Name]);
 
         private static DateTimeOffset[] GetLocalDates(object value)
         {
@@ -83,12 +105,12 @@ namespace AveoAudio
             return value is DateTimeOffset offset ? [offset.TruncateTime()] : (DateTimeOffset[])value;
         }
 
-        private static void SyncTrackHistory(string fileName, DateTimeOffset[] localDates, Dictionary<string, DateTimeOffset[]> history, HashSet<DateTimeOffset> hashSet)
+        private static void SyncTrackHistory(string name, DateTimeOffset[] localDates, Dictionary<string, DateTimeOffset[]> history, HashSet<DateTimeOffset> hashSet)
         {
             hashSet.Clear();
             hashSet.AddRange(localDates);
 
-            if (history.TryGetValue(fileName, out var dates))
+            if (history.TryGetValue(name, out var dates))
             {
                 var addedAny = false;
                 foreach (var date in dates)
@@ -99,13 +121,13 @@ namespace AveoAudio
                 if (addedAny)
                 {
                     var mergedValues = hashSet.OrderBy(d => d).ToArray();
-                    Container.Values[fileName] = mergedValues;
-                    history[fileName] = mergedValues;
+                    Container.Values[name] = mergedValues;
+                    history[name] = mergedValues;
                     return;
                 }
             }
 
-            history[fileName] = localDates;
+            history[name] = localDates;
         }
 
         private static async Task<IRandomAccessStream> CreateOrOpenFile()

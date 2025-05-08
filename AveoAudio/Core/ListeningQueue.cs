@@ -15,7 +15,7 @@ public class ListeningQueue(int capacity) : INotifyCollectionChanged
 
     public int Count { get; private set; }
 
-    public Track Current => this.source[this.CurrentIndex];
+    public Track Current => this.CurrentIndex != -1 ? this.source[this.CurrentIndex] : null;
 
     public int CurrentIndex { get; private set; } = -1;
 

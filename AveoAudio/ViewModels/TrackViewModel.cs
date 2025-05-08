@@ -6,10 +6,17 @@ namespace AveoAudio.ViewModels;
 
 public class TrackViewModel(TracklistViewModel tracklist, Track track) : NotificationBase
 {
+    private DateTime? datePlayed;
     private bool isCurrent;
     private bool isSelected;
 
     private TagListBuilder tagsBuilder = new(track.Tags);
+
+    public DateTime? DatePlayed
+    {
+        get => this.datePlayed;
+        set => this.SetProperty(ref this.datePlayed, value);
+    }
 
     public bool HasChanges => this.Tags != this.Track.Tags;
 

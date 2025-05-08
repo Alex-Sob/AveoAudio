@@ -60,17 +60,17 @@ public class TracklistViewModel : NotificationBase
         await Launcher.LaunchFolderAsync(folder, new FolderLauncherOptions { ItemsToSelect = { file } });
     }
 
+    public void MarkCurrentAsPlayed() => this.Tracks[this.queue.CurrentIndex].DatePlayed = DateTime.Today;
+
     public void Play()
     {
-        var index = this.Tracks.IndexOf(this.SelectedTrack);
-
-        if (index == this.queue.CurrentIndex)
+        if (this.SelectedTrack.Track == this.queue.Current)
             this.mainViewModel.Play();
-        else if (index == this.queue.CurrentIndex + 1)
-            this.mainViewModel.PlayNext();
         else
         {
-            this.queue.AddNextUp(this.SelectedTrack.Track);
+            if (this.SelectedTrack.Track != this.queue.Next)
+                this.queue.AddNextUp(this.SelectedTrack.Track);
+
             this.mainViewModel.PlayNext();
         }
     }

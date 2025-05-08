@@ -11,7 +11,7 @@ namespace AveoAudio;
 public class Track
 {
     private static TrackDataParser parser;
-    private string fileName;
+    private string name;
 
     static Track()
     {
@@ -24,7 +24,7 @@ public class Track
 
     public StorageFile File { get; private set; }
 
-    public string FileName => this.fileName ?? (fileName = Path.GetFileNameWithoutExtension(this.File.Name));
+    public string Name => this.name ?? (name = GetName(this.File.Name).ToString());
 
     public string Genre { get; private set; }
 
@@ -39,6 +39,8 @@ public class Track
     public Weather Weather { get; internal set; }
 
     public static event EventHandler<TrackEventArgs> TagsUpdated;
+
+    public static ReadOnlySpan<char> GetName(string pathOrFileName) => Path.GetFileNameWithoutExtension(pathOrFileName.AsSpan());
 
     public static async Task<Track> Load(StorageFile file, string genre)
     {
@@ -58,7 +60,12 @@ public class Track
         return track;
     }
 
-    public override string ToString() => this.FileName;
+    public static async Task<Track> Load(string path, string genre)
+    {
+        return await Load(await StorageFile.GetFileFromPathAsync(path), genre);
+    }
+
+    public override string ToString() => this.Name;
 
     public async Task UpdateTags(string rawTags)
     {

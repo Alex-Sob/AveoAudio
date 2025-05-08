@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,7 +26,6 @@ public class MainViewModel : NotificationBase
     private readonly DispatcherQueue dispatcherQueue;
     private readonly ImageManager imageManager;
     private readonly MediaPlayer mediaPlayer;
-    private readonly MusicLibrary musicLibrary;
     private readonly ListeningQueue queue;
 
     private string busyText;
@@ -43,7 +41,6 @@ public class MainViewModel : NotificationBase
         this.appSettings = appSettings;
         this.dispatcherQueue = dispatcherQueue;
 
-        this.musicLibrary = new MusicLibrary();
         this.queue = new ListeningQueue(appSettings.PlaylistSize);
         this.imageManager = new ImageManager();
 
@@ -241,7 +238,8 @@ public class MainViewModel : NotificationBase
         if (this.Playlist != null) this.Playlist.CurrentItemChanged -= this.OnTrackChanged;
         this.Playlist = null;
 
-        var tracks = await this.musicLibrary.LoadTracksAsync(this.Filter.SelectedGenres);
+        await MusicLibrary.Current.LoadByGenresAsync(this.Filter.SelectedGenres);
+        var tracks = MusicLibrary.Current.GetByGenres(this.Filter.SelectedGenres);
 
         var builder = new PlaylistBuilder(tracks, this.appSettings)
             .WithTimeOfDay(this.Selectors.TimeOfDay)
@@ -253,8 +251,9 @@ public class MainViewModel : NotificationBase
             .WithOutOfRotationTimeSincePlayed(this.Filter.OutOfRotationDaysSincePlayed);
 
         var query = builder.Build().Shuffle().Take(this.appSettings.PlaylistSize);
+        this.queue.Reload(query);
 
-        UpdatePlaylist(query);
+        RecreatePlaylist();
         await UpdateImageAsync();
 
         ShowPane(Pane.Player);
@@ -273,8 +272,15 @@ public class MainViewModel : NotificationBase
 
     private void OnQueueChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.Action == NotifyCollectionChangedAction.Add && e.NewStartingIndex == this.queue.CurrentIndex + 1)
-            this.Playlist.Items[this.CurrentTrackIndex + 1] = CreateMediaSource(this.queue.Next);
+        if (e.Action == NotifyCollectionChangedAction.Add)
+        {
+            if (this.Playlist == null)
+                RecreatePlaylist();
+            else if (e.NewStartingIndex == this.Playlist.Items.Count)
+                AddToPlaylist(this.Playlist, this.queue[e.NewStartingIndex]);
+            else if (e.NewStartingIndex == this.queue.CurrentIndex + 1)
+                this.Playlist.Items[e.NewStartingIndex] = CreateMediaSource(this.queue.Next);
+        }
     }
 
     private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
@@ -296,7 +302,12 @@ public class MainViewModel : NotificationBase
         {
             this.listened = true;
             HistoryManager.Add(this.currentTrack);
-            this.Dispatch(() => this.History.Add(this.currentTrack));
+
+            this.Dispatch(() =>
+            {
+                this.Queue.MarkCurrentAsPlayed();
+                this.History.Add(this.currentTrack);
+            });
         }
     }
 
@@ -343,10 +354,8 @@ public class MainViewModel : NotificationBase
         this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
     }
 
-    private void UpdatePlaylist(IEnumerable<Track> query)
+    private void RecreatePlaylist()
     {
-        this.queue.Reload(query);
-
         if (!this.queue.HasNext)
         {
             this.Playlist = null;
