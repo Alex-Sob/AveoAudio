@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:AveoAudio.Views"
     xmlns:viewModels="using:AveoAudio.ViewModels"
+    xmlns:views="using:AveoAudio.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -11,25 +12,52 @@
 
     <UserControl.Resources>
         <CollectionViewSource x:Key="TagGroups" Source="{Binding TagGroups}" IsSourceGrouped="True" />
+
+        <Style TargetType="GroupItem">
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Margin" Value="0 0 0 20" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GroupItem">
+                        <Grid Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            
+                            <ContentControl x:Name="HeaderContent"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                Margin="{TemplateBinding Padding}"
+                                TabIndex="0"
+                                IsTabStop="False" />
+                            
+                            <ItemsControl x:Name="ItemsControl" Grid.Column="1" ItemsSource="{Binding GroupItems}" IsTabStop="False" TabNavigation="Once" TabIndex="1">
+                                <ItemsControl.ItemContainerTransitions>
+                                    <AddDeleteThemeTransition />
+                                    <ContentThemeTransition />
+                                    <ReorderThemeTransition />
+                                    <EntranceThemeTransition IsStaggeringEnabled="False" />
+                                </ItemsControl.ItemContainerTransitions>
+                            </ItemsControl>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
-    <ItemsControl ItemsSource="{Binding Source={StaticResource TagGroups}}">
+    <ItemsControl ItemsSource="{Binding Source={StaticResource TagGroups}}" Margin="{x:Bind view.Padding}">
         <ItemsControl.GroupStyle>
             <GroupStyle>
-                <GroupStyle.ContainerStyle>
-                    <Style TargetType="GroupItem">
-                        <Setter Property="Margin" Value="0 0 0 10" />
-                        <!-- Use Grid in the Template and set Grid.Column in HeaderTemplate/ItemTemplate -->
-                    </Style>
-                </GroupStyle.ContainerStyle>
                 <GroupStyle.HeaderTemplate>
                     <DataTemplate>
-                        <TextBlock Foreground="Gray" Margin="0 0 0 5" Text="{Binding Name}" />
+                        <TextBlock Text="{Binding Name}" Foreground="Gray" Margin="0 0 0 5" MinWidth="85" />
                     </DataTemplate>
                 </GroupStyle.HeaderTemplate>
                 <GroupStyle.Panel>
                     <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
+                        <views:WrapPanel VerticalSpacing="5" />
                     </ItemsPanelTemplate>
                 </GroupStyle.Panel>
             </GroupStyle>

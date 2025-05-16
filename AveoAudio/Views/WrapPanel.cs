@@ -64,7 +64,7 @@ public partial class WrapPanel : Panel
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        double curRowWidth = 0, maxRowWidth = 0, curRowHeight = 0, panelHeight = 0;
+        double curRowWidth = 0, maxRowWidth = 0, curRowHeight = 0, totalHeight = 0;
 
         var childAvailableSize = new Size(
             availableSize.Width - Padding.Left - Padding.Right,
@@ -82,16 +82,16 @@ public partial class WrapPanel : Panel
             else
             {
                 curRowWidth = child.DesiredSize.Width;
-                panelHeight += curRowHeight + this.VerticalSpacing;
+                totalHeight += curRowHeight + this.VerticalSpacing;
                 curRowHeight = child.DesiredSize.Height;
             }
 
             if (curRowWidth > maxRowWidth) maxRowWidth = curRowWidth;
         }
 
-        panelHeight += curRowHeight;
+        totalHeight += curRowHeight;
 
-        return new Size(maxRowWidth, panelHeight);
+        return new Size(maxRowWidth, totalHeight);
     }
 
     protected override Size ArrangeOverride(Size finalSize)

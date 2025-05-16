@@ -494,7 +494,7 @@
                     <ItemsControl ItemsSource="{x:Bind ViewModel.Genres, Mode=OneWay}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" />
+                                <views:WrapPanel VerticalSpacing="5" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
