@@ -1,4 +1,5 @@
 ﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AveoAudio.Views;
@@ -22,8 +23,11 @@ public static class FlyoutBehavior
 
     private static void OnGotFocus(object sender, RoutedEventArgs e)
     {
-        if (e.OriginalSource is FrameworkElement element && FlyoutBase.GetAttachedFlyout(element) != null)
+        if (e.OriginalSource is FrameworkElement element &&
+            FlyoutBase.GetAttachedFlyout(element) is Flyout flyout &&
+            flyout.Content is FrameworkElement content)
         {
+            content.Width = element.ActualWidth;
             FlyoutBase.ShowAttachedFlyout(element);
         }
     }

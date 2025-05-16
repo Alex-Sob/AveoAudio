@@ -122,6 +122,11 @@
                 <Setter Property="Foreground" Value="DarkSlateGray" />
                 <Setter Property="Padding" Value="10 3" />
             </Style>
+
+            <Style x:Key="TagEditorFlyoutStyle" TargetType="FlyoutPresenter">
+                <Setter Property="MaxWidth" Value="NaN" />
+                <Setter Property="Padding" Value="0" />
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -171,8 +176,8 @@
                             Grid.Column="2" Grid.ColumnSpan="{Binding HasChanges, Converter={StaticResource BoolToColumnSpanConverter}}" VerticalAlignment="Center"
                             Text="{Binding Tags, Mode=TwoWay, UpdateSourceTrigger=LostFocus}">
                             <FlyoutBase.AttachedFlyout>
-                                <Flyout Placement="BottomEdgeAlignedLeft" Opening="{x:Bind EditTags}">
-                                    <views:TagsSelectorView DataContext="{x:Bind Tracklist.TagsSelector}" RightTapped="OnTagsViewRightTapped" />
+                                <Flyout FlyoutPresenterStyle="{StaticResource TagEditorFlyoutStyle}" Placement="BottomEdgeAlignedLeft" Opening="{x:Bind EditTags}">
+                                    <views:TagsSelectorView DataContext="{x:Bind Tracklist.TagsSelector}" Padding="15" RightTapped="OnTagsViewRightTapped" />
                                 </Flyout>
                             </FlyoutBase.AttachedFlyout>
                         </TextBox>
