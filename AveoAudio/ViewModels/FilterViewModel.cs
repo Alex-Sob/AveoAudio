@@ -8,13 +8,11 @@ namespace AveoAudio.ViewModels;
 
 public class FilterViewModel : NotificationBase
 {
-    private readonly MainViewModel mainViewModel;
     private readonly SelectorsViewModel selectors;
     private readonly AppSettings settings;
 
-    public FilterViewModel(MainViewModel mainViewModel, SelectorsViewModel selectors, AppSettings settings)
+    public FilterViewModel(SelectorsViewModel selectors, AppSettings settings)
     {
-        this.mainViewModel = mainViewModel;
         this.selectors = selectors;
         this.settings = settings;
 
@@ -22,6 +20,9 @@ public class FilterViewModel : NotificationBase
 
         this.FilterTagsSelector = CreateTagsSelector(this.FilterTags);
         this.ExcludeTagsSelector = CreateTagsSelector(this.ExcludeTags);
+
+        this.Genres = MusicLibrary.Current.Genres;
+        this.ApplyDefaults();
 
         this.selectors.PropertyChanged += this.OnAppStateChanged;
     }
@@ -40,7 +41,7 @@ public class FilterViewModel : NotificationBase
 
     public TagsSelectorViewModel FilterTagsSelector { get; private set; }
 
-    public IReadOnlyList<string> Genres { get; private set; }
+    public IReadOnlyCollection<string> Genres { get; private set; }
 
     public int OutOfRotationDaysSinceAdded => this.FilterByDateAdded ? GetOutOfRotationDays(this.SuggestIfAdded) : 0;
 
@@ -61,15 +62,7 @@ public class FilterViewModel : NotificationBase
 
     public bool HasGenre(string genre) => this.SelectedGenres.Contains(genre);
 
-    public async Task Initialize()
-    {
-        this.Genres = await MusicLibrary.GetGenres();
-        this.OnPropertyChanged(nameof(this.Genres));
-
-        this.ApplyDefaults();
-    }
-
-    public void RebuildPlaylist() => this.mainViewModel.RebuildPlaylist();
+    public void RebuildPlaylist() => App.Current.MainViewModel.RebuildPlaylist();
 
     private static int GetOutOfRotationDays(string value) => (int)double.Parse(value.AsSpan()[..^1]) * 365;
 

@@ -141,19 +141,7 @@
 
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="viewModels:TrackViewModel">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="40" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="35" />
-                            <ColumnDefinition Width="35" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
-
+                    <Grid ColumnDefinitions="40, *, *, 35, 35" RowDefinitions="Auto, Auto">
                         <TextBlock
                             Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center"
                             Style="{StaticResource CurrentTrackMarker}"

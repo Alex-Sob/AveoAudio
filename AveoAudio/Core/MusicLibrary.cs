@@ -12,30 +12,21 @@ namespace AveoAudio;
 
 public class MusicLibrary
 {
-    private static MusicLibrary current;
+    private static readonly QueryOptions QueryOptions = new() { FolderDepth = FolderDepth.Deep, FileTypeFilter = { Track.Extension } };
 
-    private static readonly QueryOptions QueryOptions = new() { FolderDepth = FolderDepth.Deep, FileTypeFilter = { ".mp3" } };
+    private static MusicLibrary current;
+    private static FileSystemWatcher watcher;
 
     private readonly Dictionary<string, IReadOnlyList<Track>> tracksByGenre = [];
     private readonly ConcurrentDictionary<string, Track> tracksByName = [];
 
+    private HashSet<string> genres;
+
     public static MusicLibrary Current => current ??= new();
 
-    public static async Task<IReadOnlyList<string>> GetGenres()
-    {
-        var folders = await KnownFolders.MusicLibrary.GetFoldersAsync();
+    public static event EventHandler<TrackEventArgs> TrackAdded;
 
-        var genres = from folder in folders
-                     where Directory.EnumerateFiles(folder.Path, "*.mp3").Any()
-                     let genre = folder.Name
-                     orderby genre
-                     select genre;
-
-        var result = new List<string>(folders.Count);
-        result.AddRange(genres);
-
-        return result;
-    }
+    public IReadOnlyCollection<string> Genres => this.genres;
 
     public Track GetByName(string name) => this.tracksByName.TryGetValue(name, out var track) ? track : null;
 
@@ -45,6 +36,14 @@ public class MusicLibrary
                let tracks = this.tracksByGenre.TryGetValue(genre, out var tracks) ? tracks : []
                from track in tracks
                select track;
+    }
+
+    public async Task InitializeAsync()
+    {
+        var folders = await KnownFolders.MusicLibrary.GetFoldersAsync();
+
+        this.genres = GetGenres(folders);
+        StartWatching(folders);
     }
 
     public async Task LoadByGenresAsync(IEnumerable<string> genres)
@@ -61,26 +60,75 @@ public class MusicLibrary
 
     public async Task LoadByNamesAsync(IEnumerable<string> names)
     {
-        names = names.Where(name => !this.tracksByName.ContainsKey(name));
-        var namesToLoad = new HashSet<string>(names);
-
-        if (namesToLoad.Count == 0) return;
+        var set = new HashSet<string>(names);
 
         var folders = await KnownFolders.MusicLibrary.GetFoldersAsync();
-        var alternate = namesToLoad.GetAlternateLookup<ReadOnlySpan<char>>();
+        var alternate = set.GetAlternateLookup<ReadOnlySpan<char>>();
 
         var tasks = from folder in folders
                     from path in Directory.EnumerateFiles(folder.Path)
                     where alternate.Contains(Track.GetName(path))
-                    select LoadTrack(path, folder.Name);
+                    select LoadFromPath(path, folder.Name);
 
         await Task.WhenAll(tasks).ConfigureAwait(false);
+    }
 
-        async Task LoadTrack(string path, string genre)
-        {
-            var track = await Track.Load(path, genre).ConfigureAwait(false);
-            this.tracksByName[track.Name] = track;
-        }
+    public async Task<IEnumerable<Track>> LoadNewest(int maxCount)
+    {
+        var root = await StorageFolder.GetFolderFromPathAsync(watcher.Path);
+        var files = await root.GetFilesAsync(CommonFileQuery.OrderByDate, 0, (uint)maxCount);
+        var tasks = files.Select(file => LoadFromFile(file));
+
+        return await Task.WhenAll(tasks).ConfigureAwait(false);
+    }
+
+    public async Task<IEnumerable<Track>> Search(string searchText)
+    {
+        var files = Directory.EnumerateFiles(watcher.Path, $"*{searchText}*", SearchOption.AllDirectories);
+        var tasks = files.Select(path => LoadFromPath(path));
+
+        return await Task.WhenAll(tasks).ConfigureAwait(false);
+    }
+
+    private static HashSet<string> GetGenres(IReadOnlyCollection<StorageFolder> folders)
+    {
+        var genres = from folder in folders
+                     where Directory.EnumerateFiles(folder.Path, $"*{Track.Extension}").Any()
+                     select folder.Name;
+
+        var result = new HashSet<string>(folders.Count);
+        result.AddRange(genres);
+
+        return result;
+    }
+
+    private string GetGenre(string path)
+    {
+        var relativePath = path.AsSpan(watcher.Path.Length + 1);
+        var genre = relativePath[..relativePath.IndexOf(Path.DirectorySeparatorChar)];
+
+        var alternate = this.genres.GetAlternateLookup<ReadOnlySpan<char>>();
+        return alternate.TryGetValue(genre, out var result) ? result : genre.ToString();
+    }
+
+    private async Task<Track> LoadFromPath(string path, string genre = null)
+    {
+        var file = await StorageFile.GetFileFromPathAsync(path);
+        return await LoadFromFile(file, genre);
+    }
+
+    private async Task<Track> LoadFromFile(StorageFile file, string genre = null)
+    {
+        var name = Track.GetName(file.Name.AsMemory());
+        var alternate = this.tracksByName.GetAlternateLookup<ReadOnlySpan<char>>();
+
+        if (alternate.TryGetValue(name.Span, out var track)) return track;
+
+        genre ??= GetGenre(file.Path);
+        track = await Track.Load(file, genre).ConfigureAwait(false);
+        alternate[name.Span] = track;
+
+        return track;
     }
 
     private async Task LoadTracksAsync(string genre, StorageFolder folder)
@@ -89,20 +137,29 @@ public class MusicLibrary
         var files = await fileQuery.GetFilesAsync().AsTask().ConfigureAwait(false);
 
         var tracks = new Track[files.Count];
-        var alternate = this.tracksByName.GetAlternateLookup<ReadOnlySpan<char>>();
 
-        await Task.WhenAll(files.Select(Load));
-        this.tracksByGenre[genre] = tracks;
-
-        async Task Load(StorageFile file, int index)
+        await Task.WhenAll(files.Select(async (file, index) =>
         {
-            var track = await Track.Load(file, genre).ConfigureAwait(false);
-            var name = Track.GetName(file.Name);
+            var track = await LoadFromFile(file, genre).ConfigureAwait(false);
+            tracks[index] = track;
+        }));
 
-            if (alternate.TryGetValue(name, out var cachedTrack))
-                tracks[index] = cachedTrack;
-            else
-                tracks[index] = alternate[name] = track;
-        }
+        this.tracksByGenre[genre] = tracks;
+    }
+
+    private async void OnFileCreated(object sender, FileSystemEventArgs e)
+    {
+        var track = await LoadFromPath(e.FullPath).ConfigureAwait(false);
+        TrackAdded?.Invoke(null, new TrackEventArgs(track));
+    }
+
+    private static void StartWatching(IReadOnlyCollection<StorageFolder> folders)
+    {
+        if (folders.Count == 0) return;
+
+        var path = Path.GetDirectoryName(folders.First().Path);
+
+        watcher = new FileSystemWatcher(path, $"*{Track.Extension}") { IncludeSubdirectories = true, EnableRaisingEvents = true };
+        watcher.Created += Current.OnFileCreated;
     }
 }

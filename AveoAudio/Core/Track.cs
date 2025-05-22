@@ -10,6 +10,8 @@ namespace AveoAudio;
 
 public class Track
 {
+    public const string Extension = ".mp3";
+
     private static TrackDataParser parser;
     private string name;
 
@@ -40,7 +42,15 @@ public class Track
 
     public static event EventHandler<TrackEventArgs> TagsUpdated;
 
-    public static ReadOnlySpan<char> GetName(string pathOrFileName) => Path.GetFileNameWithoutExtension(pathOrFileName.AsSpan());
+    public static ReadOnlySpan<char> GetName(ReadOnlySpan<char> pathOrFileName) => Path.GetFileNameWithoutExtension(pathOrFileName);
+
+    public static ReadOnlyMemory<char> GetName(ReadOnlyMemory<char> pathOrFileName)
+    {
+        var index = MemoryExtensions.LastIndexOf(pathOrFileName.Span, Path.DirectorySeparatorChar);
+        var start = index >= 0 ? index + 1 : 0;
+
+        return pathOrFileName.Slice(start, pathOrFileName.Length - start - Extension.Length);
+    }
 
     public static async Task<Track> Load(StorageFile file, string genre)
     {
@@ -58,11 +68,6 @@ public class Track
         parser.ParseTags(track, rawTags);
 
         return track;
-    }
-
-    public static async Task<Track> Load(string path, string genre)
-    {
-        return await Load(await StorageFile.GetFileFromPathAsync(path), genre);
     }
 
     public override string ToString() => this.Name;

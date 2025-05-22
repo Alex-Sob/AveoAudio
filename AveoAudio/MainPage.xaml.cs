@@ -22,8 +22,7 @@ public sealed partial class MainPage : Page
         base.OnNavigatedTo(e);
 
         var settings = (AppSettings)e.Parameter;
-        // TODO: Re-consider DispatcherQueue usage
-        this.ViewModel = new MainViewModel(settings, this.mediaPlayer.MediaPlayer, this.DispatcherQueue);
+        this.ViewModel = new MainViewModel(settings, this.mediaPlayer.MediaPlayer);
     }
 
     private void OnImageManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)

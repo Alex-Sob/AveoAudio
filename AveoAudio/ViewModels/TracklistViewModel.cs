@@ -9,25 +9,26 @@ namespace AveoAudio.ViewModels;
 
 public class TracklistViewModel : NotificationBase
 {
-    private readonly MainViewModel mainViewModel;
     private readonly ListeningQueue queue;
+    private static ObservableCollection<TagGroup> tagGroups;
 
     private TrackViewModel selectedTrack;
 
-    public TracklistViewModel(ListeningQueue queue, MainViewModel mainViewModel)
+    public TracklistViewModel(ListeningQueue queue)
     {
         this.queue = queue;
-        this.mainViewModel = mainViewModel;
 
         var toggleTagCommand = new DelegateCommand<TagEditorItem>(t => EditingTagsFor.ToggleTag(t));
 
-        this.TagGroups = CreateTagGroups();
-        this.TagsSelector = new TagsSelectorViewModel(this.TagGroups, toggleTagCommand);
+        tagGroups ??= CreateTagGroups();
+        this.TagsSelector = new TagsSelectorViewModel(TagGroups, toggleTagCommand);
 
-        this.CommonTags.AddRange(this.TagGroups.SelectMany(g => g).Select(t => t.Tag));
+        this.CommonTags.AddRange(TagGroups.SelectMany(g => g).Select(t => t.Tag));
 
         Track.TagsUpdated += OnTagsUpdated;
     }
+
+    public ObservableCollection<TagGroup> TagGroups => tagGroups;
 
     public HashSet<string> CommonTags { get; } = new(32);
 
@@ -44,13 +45,13 @@ public class TracklistViewModel : NotificationBase
         }
     }
 
-    public ObservableCollection<TagGroup> TagGroups { get; }
-
     public TagsSelectorViewModel TagsSelector { get; }
 
     public IList<TrackViewModel> Tracks { get; private set; } = new ObservableCollection<TrackViewModel>();
 
     public void Enqueue() => this.queue.Enqueue(this.selectedTrack.Track);
+
+    public void Insert(Track track, int index) => this.Tracks.Insert(index, new TrackViewModel(this, track));
 
     public async void LaunchFolder()
     {
@@ -60,18 +61,26 @@ public class TracklistViewModel : NotificationBase
         await Launcher.LaunchFolderAsync(folder, new FolderLauncherOptions { ItemsToSelect = { file } });
     }
 
+    public void Load(IEnumerable<Track> tracks) => this.Load(tracks.Select(t => new TrackViewModel(this, t)));
+
+    public void Load(IEnumerable<TrackViewModel> tracks)
+    {
+        this.Tracks.Clear();
+        this.Tracks.AddRange(tracks);
+    }
+
     public void MarkCurrentAsPlayed() => this.Tracks[this.queue.CurrentIndex].DatePlayed = DateTime.Today;
 
     public void Play()
     {
         if (this.SelectedTrack.Track == this.queue.Current)
-            this.mainViewModel.Play();
+            App.Current.MainViewModel.Play();
         else
         {
             if (this.SelectedTrack.Track != this.queue.Next)
                 this.queue.AddNextUp(this.SelectedTrack.Track);
 
-            this.mainViewModel.PlayNext();
+            App.Current.MainViewModel.PlayNext();
         }
     }
 
@@ -81,7 +90,7 @@ public class TracklistViewModel : NotificationBase
         item.IsChecked = true;
     }
 
-    private ObservableCollection<TagGroup> CreateTagGroups()
+    private static ObservableCollection<TagGroup> CreateTagGroups()
     {
         var groups = new List<TagGroup>(8);
 

@@ -23,7 +23,6 @@ public class MainViewModel : NotificationBase
     }
 
     private readonly AppSettings appSettings;
-    private readonly DispatcherQueue dispatcherQueue;
     private readonly ImageManager imageManager;
     private readonly MediaPlayer mediaPlayer;
     private readonly ListeningQueue queue;
@@ -35,19 +34,19 @@ public class MainViewModel : NotificationBase
     private MediaPlaybackList playbackList;
     private int selectedPane;
 
-    public MainViewModel(AppSettings appSettings, MediaPlayer mediaPlayer, DispatcherQueue dispatcherQueue)
+    public MainViewModel(AppSettings appSettings, MediaPlayer mediaPlayer)
     {
         this.mediaPlayer = mediaPlayer;
         this.appSettings = appSettings;
-        this.dispatcherQueue = dispatcherQueue;
 
         this.queue = new ListeningQueue(appSettings.PlaylistSize);
         this.imageManager = new ImageManager();
 
         this.Selectors = new SelectorsViewModel();
-        this.Filter = new FilterViewModel(this, this.Selectors, this.appSettings);
-        this.Queue = new QueueViewModel(this.queue, this);
-        this.History = new HistoryViewModel(this.queue, this);
+        this.Filter = new FilterViewModel(this.Selectors, this.appSettings);
+        this.Queue = new QueueViewModel(this.queue);
+        this.History = new HistoryViewModel(this.queue);
+        this.Library = new LibraryViewModel(this.queue);
 
         Track.TagsUpdated += OnTagsUpdated;
         this.queue.CollectionChanged += this.OnQueueChanged;
@@ -117,6 +116,8 @@ public class MainViewModel : NotificationBase
 
     public bool IsPaused => !this.IsPlaying;
 
+    public LibraryViewModel Library { get; }
+
     public MediaPlaybackList Playlist
     {
         get => this.playbackList;
@@ -166,7 +167,7 @@ public class MainViewModel : NotificationBase
         }
     }
 
-    public Task Initialize() => Task.WhenAll(this.Filter.Initialize(), InitializeImage());
+    public Task Initialize() => InitializeImage();
 
     public void MoveNext()
     {
@@ -259,11 +260,6 @@ public class MainViewModel : NotificationBase
         ShowPane(Pane.Player);
     }
 
-    private void Dispatch(Action action)
-    {
-        this.dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action());
-    }
-
     private async Task InitializeImage()
     {
         var imagePath = await this.imageManager.GetNextDefaultImage();
@@ -285,7 +281,7 @@ public class MainViewModel : NotificationBase
 
     private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
     {
-        this.Dispatch(() =>
+        App.Current.Dispatch(() =>
         {
             this.OnPropertyChanged(nameof(this.IsPlaying));
             this.OnPropertyChanged(nameof(this.IsPaused));
@@ -303,7 +299,7 @@ public class MainViewModel : NotificationBase
             this.listened = true;
             HistoryManager.Add(this.currentTrack);
 
-            this.Dispatch(() =>
+            App.Current.Dispatch(() =>
             {
                 this.Queue.MarkCurrentAsPlayed();
                 this.History.Add(this.currentTrack);
@@ -326,7 +322,7 @@ public class MainViewModel : NotificationBase
 
         if (newIndex < 0 || newIndex >= this.queue.Capacity) return;
 
-        this.Dispatch(() =>
+        App.Current.Dispatch(() =>
         {
             this.CurrentTrack = this.queue[newIndex];
 

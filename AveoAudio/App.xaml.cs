@@ -3,6 +3,7 @@
 
 using AveoAudio.ViewModels;
 
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -35,6 +36,15 @@ public partial class App : Application
 
     public AppSettings AppSettings { get; private set; }
 
+    public MainViewModel MainViewModel => this.mainViewModel;
+
+    public void Dispatch(Action action)
+    {
+        this.window.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action());
+    }
+
+    public Task GetBusy(Task task, string description) => this.mainViewModel.GetBusy(task, description);
+
     /// <summary>
     /// Invoked when the application is launched.
     /// </summary>
@@ -51,7 +61,7 @@ public partial class App : Application
 
         window.Activate();
 
-        this.AppSettings = await SettingsManager.GetSettingsAsync();
+        await Task.WhenAll(LoadSettings(), MusicLibrary.Current.InitializeAsync());
 
         rootFrame.Navigate(typeof(MainPage), this.AppSettings);
 
@@ -59,5 +69,5 @@ public partial class App : Application
         _ = this.mainViewModel.Initialize();
     }
 
-    public Task GetBusy(Task task, string description) => this.mainViewModel.GetBusy(task, description);
+    private async Task LoadSettings() => this.AppSettings = await SettingsManager.GetSettingsAsync();
 }

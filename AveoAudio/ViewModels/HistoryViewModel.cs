@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 
 namespace AveoAudio.ViewModels;
 
-public class HistoryViewModel(ListeningQueue queue, MainViewModel mainViewModel)
-    : TracklistViewModel(queue, mainViewModel)
+public class HistoryViewModel(ListeningQueue queue) : TracklistViewModel(queue)
 {
     public IList<TrackViewModel> History => this.Tracks;
 
@@ -14,17 +13,16 @@ public class HistoryViewModel(ListeningQueue queue, MainViewModel mainViewModel)
 
     public void Add(Track track) => this.History.Insert(0, new TrackViewModel(this, track) { DatePlayed = DateTime.Today });
 
-    public void Load() => App.Current.GetBusy(LoadAsync(), "Loading");
+    public void LoadHistory() => App.Current.GetBusy(LoadHistoryAsync(), "Loading");
 
     public void Sync() => App.Current.GetBusy(HistoryManager.Sync(), "Syncing");
 
-    private async Task LoadAsync()
+    private async Task LoadHistoryAsync()
     {
         var entries = await HistoryManager.Load(GetStartDate(), DateTime.Today.AddDays(1));
         var tracks = entries.Select(e => new TrackViewModel(this, e.Track) { DatePlayed = e.Date });
 
-        this.Tracks.Clear();
-        this.Tracks.AddRange(tracks);
+        this.Load(tracks);
     }
 
     private DateTime GetStartDate()

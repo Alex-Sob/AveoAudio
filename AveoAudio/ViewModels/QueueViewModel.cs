@@ -9,7 +9,7 @@ public class QueueViewModel : TracklistViewModel
     private readonly ListeningQueue queue;
     private int currentIndex = -1;
 
-    public QueueViewModel(ListeningQueue queue, MainViewModel mainViewModel) : base(queue, mainViewModel)
+    public QueueViewModel(ListeningQueue queue) : base(queue)
     {
         this.queue = queue;
 
@@ -21,11 +21,7 @@ public class QueueViewModel : TracklistViewModel
 
     public void GoToTrack(int index) => this.SelectedTrack = this.Queue[index];
 
-    private void Insert(int index)
-    {
-        var item = new TrackViewModel(this, this.queue[index]);
-        this.Tracks.Insert(index, item);
-    }
+    private void Insert(int index) => this.Insert(this.queue[index], index);
 
     private void OnCurrentChanged(object sender, EventArgs e)
     {
