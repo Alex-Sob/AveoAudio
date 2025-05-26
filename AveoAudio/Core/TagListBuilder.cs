@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AveoAudio;
+﻿namespace AveoAudio;
 
 public struct TagListBuilder(TagList tags)
 {

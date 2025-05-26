@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AveoAudio;
+﻿namespace AveoAudio;
 
 public sealed class TrackEventArgs(Track track) : EventArgs
 {

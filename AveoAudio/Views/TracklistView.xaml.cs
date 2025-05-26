@@ -7,7 +7,6 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 
 using System.ComponentModel;
-using System.Linq;
 
 namespace AveoAudio.Views;
 
@@ -19,7 +18,7 @@ public sealed partial class TracklistView : UserControl
         this.DataContextChanged += this.OnDataContextChanged;
     }
 
-    public TracklistViewModel ViewModel { get; set; }
+    public TracklistViewModel? ViewModel { get; set; }
 
     private void OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
@@ -28,10 +27,10 @@ public sealed partial class TracklistView : UserControl
         if (this.ViewModel != null) this.ViewModel.PropertyChanged += this.OnViewModelPropertyChanged;
     }
 
-    private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(this.ViewModel.SelectedTrack))
-            this.tracklist.ScrollIntoView(this.ViewModel.SelectedTrack);
+            this.tracklist.ScrollIntoView(this.ViewModel!.SelectedTrack);
     }
 
     private void OnScrollToBottom(object sender, RoutedEventArgs e)
@@ -50,12 +49,12 @@ public sealed partial class TracklistView : UserControl
 
         if (toggleButton != null)
         {
-            this.ViewModel.ToggleBestTimeOfDay((TagEditorItem)toggleButton.DataContext);
+            this.ViewModel?.ToggleBestTimeOfDay((TagEditorItem)toggleButton.DataContext);
             e.Handled = true;
         }
     }
 
-    private static T FindAncestor<T>(DependencyObject obj)
+    private static T? FindAncestor<T>(DependencyObject obj)
     {
         var parent = VisualTreeHelper.GetParent(obj);
 

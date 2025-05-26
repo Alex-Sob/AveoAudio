@@ -1,11 +1,8 @@
-﻿using System;
+﻿namespace AveoAudio;
 
-namespace AveoAudio
+public class DelegateCommand<T> : DelegateCommand
 {
-    public class DelegateCommand<T> : DelegateCommand
+    public DelegateCommand(Action<T?> action) : base(p => action((T?)p))
     {
-        public DelegateCommand(Action<T> action) : base(p => action((T)p))
-        {
-        }
     }
 }

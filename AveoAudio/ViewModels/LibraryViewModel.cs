@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace AveoAudio.ViewModels;
+﻿namespace AveoAudio.ViewModels;
 
 public class LibraryViewModel : NotificationBase
 {
@@ -9,7 +6,7 @@ public class LibraryViewModel : NotificationBase
 
     public TracklistViewModel SearchResults { get; }
 
-    public string SearchText { get; set; }
+    public string? SearchText { get; set; }
 
     public LibraryViewModel(ListeningQueue queue)
     {
@@ -32,7 +29,7 @@ public class LibraryViewModel : NotificationBase
         this.NewTracks.Load(tracks);
     }
 
-    private void OnTrackAdded(object sender, TrackEventArgs e)
+    private void OnTrackAdded(object? sender, TrackEventArgs e)
     {
         App.Current.Dispatch(() => this.NewTracks.Insert(e.Track, 0));
     }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace AveoAudio;
+﻿namespace AveoAudio;
 
 public class FilterDefaults
 {

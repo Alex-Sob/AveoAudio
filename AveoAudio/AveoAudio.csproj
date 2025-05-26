@@ -12,6 +12,8 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <!-- Added by VS while creating app packages -->

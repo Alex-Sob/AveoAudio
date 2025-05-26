@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
 
 using Windows.System;
 
@@ -10,31 +7,27 @@ namespace AveoAudio.ViewModels;
 public class TracklistViewModel : NotificationBase
 {
     private readonly ListeningQueue queue;
-    private static ObservableCollection<TagGroup> tagGroups;
+    private static ObservableCollection<TagGroup>? tagGroups;
 
-    private TrackViewModel selectedTrack;
+    private TrackViewModel? selectedTrack;
 
     public TracklistViewModel(ListeningQueue queue)
     {
         this.queue = queue;
 
-        var toggleTagCommand = new DelegateCommand<TagEditorItem>(t => EditingTagsFor.ToggleTag(t));
-
-        tagGroups ??= CreateTagGroups();
-        this.TagsSelector = new TagsSelectorViewModel(TagGroups, toggleTagCommand);
-
+        this.TagsSelector = CreateTagsSelector();
         this.CommonTags.AddRange(TagGroups.SelectMany(g => g).Select(t => t.Tag));
 
         Track.TagsUpdated += OnTagsUpdated;
     }
 
-    public ObservableCollection<TagGroup> TagGroups => tagGroups;
+    public ObservableCollection<TagGroup> TagGroups => tagGroups ??= CreateTagGroups();
 
     public HashSet<string> CommonTags { get; } = new(32);
 
-    public TrackViewModel EditingTagsFor { get; set; }
+    public TrackViewModel? EditingTagsFor { get; set; }
 
-    public TrackViewModel SelectedTrack
+    public TrackViewModel? SelectedTrack
     {
         get => this.selectedTrack;
         set
@@ -49,13 +42,13 @@ public class TracklistViewModel : NotificationBase
 
     public IList<TrackViewModel> Tracks { get; private set; } = new ObservableCollection<TrackViewModel>();
 
-    public void Enqueue() => this.queue.Enqueue(this.selectedTrack.Track);
+    public void Enqueue() => this.queue.Enqueue(this.selectedTrack!.Track);
 
     public void Insert(Track track, int index) => this.Tracks.Insert(index, new TrackViewModel(this, track));
 
     public async void LaunchFolder()
     {
-        var file = this.SelectedTrack.Track.File;
+        var file = this.SelectedTrack!.Track.File;
         var folder = await file.GetParentAsync();
 
         await Launcher.LaunchFolderAsync(folder, new FolderLauncherOptions { ItemsToSelect = { file } });
@@ -73,7 +66,7 @@ public class TracklistViewModel : NotificationBase
 
     public void Play()
     {
-        if (this.SelectedTrack.Track == this.queue.Current)
+        if (this.SelectedTrack!.Track == this.queue.Current)
             App.Current.MainViewModel.Play();
         else
         {
@@ -86,7 +79,7 @@ public class TracklistViewModel : NotificationBase
 
     public void ToggleBestTimeOfDay(TagEditorItem item)
     {
-        this.EditingTagsFor.ToggleBestTimeOfDay(item);
+        this.EditingTagsFor!.ToggleBestTimeOfDay(item);
         item.IsChecked = true;
     }
 
@@ -106,7 +99,13 @@ public class TracklistViewModel : NotificationBase
         return [.. groups];
     }
 
-    private void OnTagsUpdated(object sender, TrackEventArgs e)
+    private TagsSelectorViewModel CreateTagsSelector()
+    {
+        var toggleTagCommand = new DelegateCommand<TagEditorItem>(t => EditingTagsFor!.ToggleTag(t ?? throw new ArgumentNullException()));
+        return new TagsSelectorViewModel(TagGroups, toggleTagCommand);
+    }
+
+    private void OnTagsUpdated(object? sender, TrackEventArgs e)
     {
         foreach (var trackViewModel in this.Tracks)
         {

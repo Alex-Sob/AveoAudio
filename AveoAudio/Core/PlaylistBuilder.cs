@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace AveoAudio;
+﻿namespace AveoAudio;
 
 public class PlaylistBuilder(IEnumerable<Track> source, AppSettings settings)
 {

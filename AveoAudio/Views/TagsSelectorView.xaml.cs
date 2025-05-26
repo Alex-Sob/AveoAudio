@@ -13,7 +13,7 @@ public sealed partial class TagsSelectorView : UserControl
         this.DataContextChanged += OnDataContextChanged;
     }
 
-    public TagsSelectorViewModel ViewModel { get; set; }
+    public TagsSelectorViewModel? ViewModel { get; set; }
 
     private void OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {

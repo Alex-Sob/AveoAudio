@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace AveoAudio.ViewModels;
+﻿namespace AveoAudio.ViewModels;
 
 public class HistoryViewModel(ListeningQueue queue) : TracklistViewModel(queue)
 {

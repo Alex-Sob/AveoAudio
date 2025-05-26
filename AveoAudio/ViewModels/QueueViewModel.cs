@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 
 namespace AveoAudio.ViewModels;
 
@@ -23,7 +21,7 @@ public class QueueViewModel : TracklistViewModel
 
     private void Insert(int index) => this.Insert(this.queue[index], index);
 
-    private void OnCurrentChanged(object sender, EventArgs e)
+    private void OnCurrentChanged(object? sender, EventArgs e)
     {
         if (this.currentIndex != -1) this.Queue[this.currentIndex].IsCurrent = false;
 
@@ -31,7 +29,7 @@ public class QueueViewModel : TracklistViewModel
         if (this.currentIndex != -1) this.Queue[this.currentIndex].IsCurrent = true;
     }
 
-    private void OnQueueChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void OnQueueChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
             this.Insert(e.NewStartingIndex);

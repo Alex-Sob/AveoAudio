@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using System.Windows.Input;
 
 namespace AveoAudio.ViewModels;
@@ -16,7 +13,7 @@ public class FilterViewModel : NotificationBase
         this.selectors = selectors;
         this.settings = settings;
 
-        this.ToggleGenreCommand = new DelegateCommand<string>(g => ToggleValue(this.SelectedGenres, g));
+        this.ToggleGenreCommand = new DelegateCommand<string>(g => ToggleValue(this.SelectedGenres, g ?? throw new ArgumentNullException()));
 
         this.FilterTagsSelector = CreateTagsSelector(this.FilterTags);
         this.ExcludeTagsSelector = CreateTagsSelector(this.ExcludeTags);
@@ -80,7 +77,7 @@ public class FilterViewModel : NotificationBase
 
     private static TagsSelectorViewModel CreateTagsSelector(ICollection<string> selectedTags)
     {
-        var toggleTagCommand = new DelegateCommand<TagEditorItem>(t => ToggleValue(selectedTags, t));
+        var toggleTagCommand = new DelegateCommand<TagEditorItem>(t => ToggleValue(selectedTags, t ?? throw new ArgumentNullException()));
         return new(CreateTagGroups(), toggleTagCommand);
     }
 
@@ -89,7 +86,7 @@ public class FilterViewModel : NotificationBase
         if (!collection.Remove(value)) collection.Add(value);
     }
 
-    private void OnAppStateChanged(object sender, PropertyChangedEventArgs e)
+    private void OnAppStateChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(SelectorsViewModel.TimeOfDay) || e.PropertyName == nameof(SelectorsViewModel.Weather))
         {
@@ -116,7 +113,7 @@ public class FilterViewModel : NotificationBase
 
     private void ApplyDefaults<TEnum>(TEnum? value) where TEnum : struct
     {
-        this.settings.FilterDefaults.TryGetValue(value?.ToString() ?? "", out FilterDefaults defaults);
+        this.settings.FilterDefaults.TryGetValue(value?.ToString() ?? "", out FilterDefaults? defaults);
 
         this.SelectedGenres.AddRange(defaults?.Genres ?? []);
         this.FilterTags.AddRange(defaults?.Tags ?? []);

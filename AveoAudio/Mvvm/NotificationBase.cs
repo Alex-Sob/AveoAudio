@@ -1,28 +1,26 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace AveoAudio
+namespace AveoAudio;
+
+public class NotificationBase : INotifyPropertyChanged
 {
-    public class NotificationBase : INotifyPropertyChanged
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
+    protected bool SetProperty<T>(ref T property, T value, [CallerMemberName] string propertyName = "")
+    {
+        if (EqualityComparer<T>.Default.Equals(property, value))
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            return false;
         }
 
-        protected bool SetProperty<T>(ref T property, T value, [CallerMemberName] string propertyName = "")
-        {
-            if (EqualityComparer<T>.Default.Equals(property, value))
-            {
-                return false;
-            }
-
-            property = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
+        property = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
 }

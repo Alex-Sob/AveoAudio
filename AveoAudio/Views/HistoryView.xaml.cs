@@ -13,7 +13,7 @@ public sealed partial class HistoryView : UserControl
         this.DataContextChanged += this.OnDataContextChanged;
     }
 
-    public HistoryViewModel ViewModel { get; set; }
+    public HistoryViewModel? ViewModel { get; set; }
 
     private void OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {

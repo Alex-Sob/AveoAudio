@@ -7,9 +7,6 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-using System;
-using System.Threading.Tasks;
-
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
@@ -20,8 +17,8 @@ namespace AveoAudio;
 /// </summary>
 public partial class App : Application
 {
-    private MainViewModel mainViewModel;
-    private Window window;
+    private MainViewModel? mainViewModel;
+    private Window? window;
 
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
@@ -34,16 +31,16 @@ public partial class App : Application
 
     public new static App Current => (App)Application.Current;
 
-    public AppSettings AppSettings { get; private set; }
+    public AppSettings AppSettings { get; private set; } = AppSettings.Default;
 
-    public MainViewModel MainViewModel => this.mainViewModel;
+    public MainViewModel MainViewModel => this.mainViewModel ?? throw new InvalidOperationException();
 
     public void Dispatch(Action action)
     {
-        this.window.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action());
+        this.window!.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () => action());
     }
 
-    public Task GetBusy(Task task, string description) => this.mainViewModel.GetBusy(task, description);
+    public Task GetBusy(Task task, string description) => this.mainViewModel!.GetBusy(task, description);
 
     /// <summary>
     /// Invoked when the application is launched.
@@ -66,8 +63,11 @@ public partial class App : Application
         rootFrame.Navigate(typeof(MainPage), this.AppSettings);
 
         this.mainViewModel = ((MainPage)rootFrame.Content).ViewModel;
-        _ = this.mainViewModel.Initialize();
+        await this.mainViewModel!.Initialize();
     }
 
-    private async Task LoadSettings() => this.AppSettings = await SettingsManager.GetSettingsAsync();
+    private async Task LoadSettings()
+    {
+        this.AppSettings = await SettingsManager.GetSettingsAsync() ?? AppSettings.Default;
+    }
 }

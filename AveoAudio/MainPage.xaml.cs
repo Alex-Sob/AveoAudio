@@ -1,6 +1,4 @@
-﻿using System;
-
-using AveoAudio.ViewModels;
+﻿using AveoAudio.ViewModels;
 
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -15,7 +13,7 @@ public sealed partial class MainPage : Page
         this.InitializeComponent();
     }
 
-    public MainViewModel ViewModel { get; private set; }
+    public MainViewModel? ViewModel { get; private set; }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -31,11 +29,11 @@ public sealed partial class MainPage : Page
         var y = e.Cumulative.Translation.Y;
 
         if (Math.Abs(y) < x)
-            this.ViewModel.MoveNext();
+            this.ViewModel?.MoveNext();
         else if (x < -Math.Abs(y))
-            this.ViewModel.MovePrevious();
+            this.ViewModel?.MovePrevious();
         else if (y > -Math.Abs(x))
-            this.ViewModel.RewindToStart();
+            this.ViewModel?.RewindToStart();
     }
 
     private void OnPlayerElementTapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;

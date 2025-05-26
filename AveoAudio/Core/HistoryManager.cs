@@ -1,12 +1,7 @@
-﻿using System;
-using System.Buffers.Text;
+﻿using System.Buffers.Text;
 using System.Buffers;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -141,7 +136,7 @@ namespace AveoAudio
 
         private static Dictionary<string, DateTimeOffset[]> GetHistory(Stream stream)
         {
-            return JsonSerializer.Deserialize<Dictionary<string, DateTimeOffset[]>>(stream);
+            return JsonSerializer.Deserialize<Dictionary<string, DateTimeOffset[]>>(stream) ?? [];
         }
 
         private static DateTimeOffset TruncateTime(this DateTimeOffset value)

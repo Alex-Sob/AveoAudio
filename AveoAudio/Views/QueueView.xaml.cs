@@ -13,7 +13,7 @@ public sealed partial class QueueView : UserControl
         this.DataContextChanged += this.OnDataContextChanged;
     }
 
-    public QueueViewModel ViewModel { get; set; }
+    public QueueViewModel? ViewModel { get; set; }
 
     private void OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {

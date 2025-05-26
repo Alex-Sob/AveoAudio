@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 
 namespace AveoAudio;
 
@@ -15,17 +13,17 @@ public class ListeningQueue(int capacity) : INotifyCollectionChanged
 
     public int Count { get; private set; }
 
-    public Track Current => this.CurrentIndex != -1 ? this.source[this.CurrentIndex] : null;
+    public Track? Current => this.CurrentIndex != -1 ? this.source[this.CurrentIndex] : null;
 
     public int CurrentIndex { get; private set; } = -1;
 
     public bool HasNext => this.CurrentIndex < this.source.Count - 1;
 
-    public Track Next => this.HasNext ? this.source[this.CurrentIndex + 1] : null;
+    public Track? Next => this.HasNext ? this.source[this.CurrentIndex + 1] : null;
 
-    public event NotifyCollectionChangedEventHandler CollectionChanged;
+    public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
-    public event EventHandler CurrentChanged;
+    public event EventHandler? CurrentChanged;
 
     public void AddNextUp(Track track)
     {

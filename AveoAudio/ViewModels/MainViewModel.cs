@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Specialized;
 
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 
@@ -27,11 +23,11 @@ public class MainViewModel : NotificationBase
     private readonly MediaPlayer mediaPlayer;
     private readonly ListeningQueue queue;
 
-    private string busyText;
-    private Track currentTrack;
-    private ImageSource imageSource;
+    private string? busyText;
+    private Track? currentTrack;
+    private ImageSource? imageSource;
     private bool listened;
-    private MediaPlaybackList playbackList;
+    private MediaPlaybackList? playbackList;
     private int selectedPane;
 
     public MainViewModel(AppSettings appSettings, MediaPlayer mediaPlayer)
@@ -54,7 +50,7 @@ public class MainViewModel : NotificationBase
         this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
     }
 
-    public string BusyText
+    public string? BusyText
     {
         get => this.busyText;
         set
@@ -64,7 +60,7 @@ public class MainViewModel : NotificationBase
         }
     }
 
-    public Track CurrentTrack
+    public Track? CurrentTrack
     {
         get => this.currentTrack;
         set
@@ -81,10 +77,10 @@ public class MainViewModel : NotificationBase
     {
         get
         {
-            if (!this.HasCurrentTrack) return null;
+            if (!this.HasCurrentTrack) return "";
 
             int current = 0;
-            Span<char> span = stackalloc char[this.currentTrack.Tags.Length + 1];
+            Span<char> span = stackalloc char[this.currentTrack!.Tags.Length + 1];
 
             foreach (ReadOnlySpan<char> tag in this.currentTrack.Tags)
             {
@@ -104,7 +100,7 @@ public class MainViewModel : NotificationBase
 
     public HistoryViewModel History { get; }
 
-    public ImageSource Image
+    public ImageSource? Image
     {
         get => this.imageSource;
         set => this.SetProperty(ref this.imageSource, value);
@@ -118,7 +114,7 @@ public class MainViewModel : NotificationBase
 
     public LibraryViewModel Library { get; }
 
-    public MediaPlaybackList Playlist
+    public MediaPlaybackList? Playlist
     {
         get => this.playbackList;
         set => SetProperty(ref this.playbackList, value);
@@ -136,7 +132,7 @@ public class MainViewModel : NotificationBase
 
     private static Season Season => (Season)(DateTime.Today.Month / 3 % 4);
 
-    private int CurrentTrackIndex => (int)this.playbackList.CurrentItemIndex;
+    private int CurrentTrackIndex => (int?)this.playbackList?.CurrentItemIndex ?? -1;
 
     public void RebuildPlaylist()
     {
@@ -194,7 +190,7 @@ public class MainViewModel : NotificationBase
 
     public void PlayNext()
     {
-        this.playbackList.MoveNext();
+        this.playbackList?.MoveNext();
         this.Play();
     }
 
@@ -266,7 +262,7 @@ public class MainViewModel : NotificationBase
         this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
     }
 
-    private void OnQueueChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void OnQueueChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
@@ -275,7 +271,7 @@ public class MainViewModel : NotificationBase
             else if (e.NewStartingIndex == this.Playlist.Items.Count)
                 AddToPlaylist(this.Playlist, this.queue[e.NewStartingIndex]);
             else if (e.NewStartingIndex == this.queue.CurrentIndex + 1)
-                this.Playlist.Items[e.NewStartingIndex] = CreateMediaSource(this.queue.Next);
+                this.Playlist.Items[e.NewStartingIndex] = CreateMediaSource(this.queue.Next!);
         }
     }
 
@@ -297,21 +293,21 @@ public class MainViewModel : NotificationBase
         if (!this.listened && session.Position.TotalSeconds > session.NaturalDuration.TotalSeconds * 0.9)
         {
             this.listened = true;
-            HistoryManager.Add(this.currentTrack);
+            HistoryManager.Add(this.currentTrack!);
 
             App.Current.Dispatch(() =>
             {
                 this.Queue.MarkCurrentAsPlayed();
-                this.History.Add(this.currentTrack);
+                this.History.Add(this.currentTrack!);
             });
         }
     }
 
-    private void OnTagsUpdated(object sender, TrackEventArgs e)
+    private void OnTagsUpdated(object? sender, TrackEventArgs e)
     {
         for (int i = 0; i < this.queue.Count; i++)
         {
-            if (this.queue[i] == e.Track) this.Playlist.Items[i] = CreateMediaSource(e.Track);
+            if (this.queue[i] == e.Track) this.Playlist!.Items[i] = CreateMediaSource(e.Track);
         }
     }
 
@@ -330,8 +326,8 @@ public class MainViewModel : NotificationBase
             {
                 this.queue.MoveNext();
 
-                if (this.Playlist.Items.Count == this.queue.Count && this.queue.HasNext)
-                    AddToPlaylist(this.Playlist, this.queue.Next);
+                if (this.Playlist!.Items.Count == this.queue.Count && this.queue.HasNext)
+                    AddToPlaylist(this.Playlist, this.queue.Next!);
             }
             else
             {
@@ -346,6 +342,7 @@ public class MainViewModel : NotificationBase
     {
         var timeOfDay = this.Selectors.SelectedTimeOfDay;
         var weather = this.Selectors.SelectedWeather;
+
         var imagePath = await this.imageManager.GetNextImage(Season.ToString(), timeOfDay, weather);
         this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
     }

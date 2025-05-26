@@ -13,7 +13,7 @@ public sealed partial class LibraryView : UserControl
         this.DataContextChanged += this.OnDataContextChanged;
     }
 
-    public LibraryViewModel ViewModel { get; set; }
+    public LibraryViewModel? ViewModel { get; set; }
 
     private void OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 
 using Windows.Storage;
 using Windows.Storage.Search;
@@ -14,21 +9,20 @@ public class MusicLibrary
 {
     private static readonly QueryOptions QueryOptions = new() { FolderDepth = FolderDepth.Deep, FileTypeFilter = { Track.Extension } };
 
-    private static MusicLibrary current;
-    private static FileSystemWatcher watcher;
+    private static FileSystemWatcher watcher = new();
 
     private readonly Dictionary<string, IReadOnlyList<Track>> tracksByGenre = [];
     private readonly ConcurrentDictionary<string, Track> tracksByName = [];
 
-    private HashSet<string> genres;
+    private HashSet<string> genres = [];
 
-    public static MusicLibrary Current => current ??= new();
+    public static MusicLibrary Current { get; } = new();
 
-    public static event EventHandler<TrackEventArgs> TrackAdded;
+    public static event EventHandler<TrackEventArgs>? TrackAdded;
 
     public IReadOnlyCollection<string> Genres => this.genres;
 
-    public Track GetByName(string name) => this.tracksByName.TryGetValue(name, out var track) ? track : null;
+    public Track? GetByName(string name) => this.tracksByName.TryGetValue(name, out var track) ? track : null;
 
     public IEnumerable<Track> GetByGenres(IEnumerable<string> genres)
     {
@@ -42,7 +36,9 @@ public class MusicLibrary
     {
         var folders = await KnownFolders.MusicLibrary.GetFoldersAsync();
 
-        this.genres = GetGenres(folders);
+        this.genres.EnsureCapacity(folders.Count);
+        this.genres.AddRange(GetGenres(folders));
+
         StartWatching(folders);
     }
 
@@ -90,16 +86,11 @@ public class MusicLibrary
         return await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
-    private static HashSet<string> GetGenres(IReadOnlyCollection<StorageFolder> folders)
+    private static IEnumerable<string> GetGenres(IReadOnlyCollection<StorageFolder> folders)
     {
-        var genres = from folder in folders
-                     where Directory.EnumerateFiles(folder.Path, $"*{Track.Extension}").Any()
-                     select folder.Name;
-
-        var result = new HashSet<string>(folders.Count);
-        result.AddRange(genres);
-
-        return result;
+        return from folder in folders
+               where Directory.EnumerateFiles(folder.Path, $"*{Track.Extension}").Any()
+               select folder.Name;
     }
 
     private string GetGenre(string path)
@@ -111,13 +102,13 @@ public class MusicLibrary
         return alternate.TryGetValue(genre, out var result) ? result : genre.ToString();
     }
 
-    private async Task<Track> LoadFromPath(string path, string genre = null)
+    private async Task<Track> LoadFromPath(string path, string? genre = null)
     {
         var file = await StorageFile.GetFileFromPathAsync(path);
         return await LoadFromFile(file, genre);
     }
 
-    private async Task<Track> LoadFromFile(StorageFile file, string genre = null)
+    private async Task<Track> LoadFromFile(StorageFile file, string? genre = null)
     {
         var name = Track.GetName(file.Name.AsMemory());
         var alternate = this.tracksByName.GetAlternateLookup<ReadOnlySpan<char>>();
@@ -159,7 +150,7 @@ public class MusicLibrary
 
         var path = Path.GetDirectoryName(folders.First().Path);
 
-        watcher = new FileSystemWatcher(path, $"*{Track.Extension}") { IncludeSubdirectories = true, EnableRaisingEvents = true };
+        watcher = new FileSystemWatcher(path!, $"*{Track.Extension}") { IncludeSubdirectories = true, EnableRaisingEvents = true };
         watcher.Created += Current.OnFileCreated;
     }
 }

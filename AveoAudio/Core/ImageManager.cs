@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Windows.Storage;
+﻿using Windows.Storage;
 
 namespace AveoAudio;
 
@@ -15,7 +9,7 @@ public class ImageManager
 
     private readonly Dictionary<string, ICollection<string>> imagesByFolder = [];
 
-    public async Task<string> GetNextDefaultImage()
+    public async Task<string?> GetNextDefaultImage()
     {
         var appFolder = await GetLibrarySubfolder();
         if (appFolder == null) return null;
@@ -24,18 +18,18 @@ public class ImageManager
         return defaultFolder != null ? await GetNextImage(defaultFolder) : null;
     }
 
-    public async Task<string> GetNextImage(string season, string timeOfDay, string weather)
+    public async Task<string?> GetNextImage(string season, string? timeOfDay, string? weather)
     {
         var folder = await GetFolderByProbing(season, timeOfDay, weather);
         return folder != null ? await this.GetNextImage(folder) : null;
     }
 
-    private static async Task<StorageFolder> GetLibrarySubfolder()
+    private static async Task<StorageFolder?> GetLibrarySubfolder()
     {
         return await KnownFolders.PicturesLibrary.TryGetItemAsync(LibrarySubfolderName) as StorageFolder;
     }
 
-    private static async Task<StorageFolder> GetFolderByProbing(string season, string timeOfDay, string weather)
+    private static async Task<StorageFolder?> GetFolderByProbing(string season, string? timeOfDay, string? weather)
     {
         var appFolder = await GetLibrarySubfolder();
         if (appFolder == null) return null;
@@ -47,7 +41,7 @@ public class ImageManager
         return folder != null ? await StorageFolder.GetFolderFromPathAsync(folder) : null;
     }
 
-    private static string GetNextImage(IReadOnlyList<StorageFile> files, ICollection<string> images)
+    private static string? GetNextImage(IReadOnlyList<StorageFile> files, ICollection<string> images)
     {
         var nextFile = files.Where(f => !images.Contains(f.Name)).Random();
 
@@ -60,7 +54,7 @@ public class ImageManager
         return null;
     }
 
-    private static IEnumerable<string> GetProbingFolders(string path, string season, string timeOfDay, string weather)
+    private static IEnumerable<string> GetProbingFolders(string path, string season, string? timeOfDay, string? weather)
     {
         yield return Path.Join(path, season, timeOfDay, weather);
         yield return Path.Join(path, season, timeOfDay);
@@ -69,7 +63,7 @@ public class ImageManager
         yield return Path.Join(path, DefaultFolder);
     }
 
-    private async Task<string> GetNextImage(StorageFolder folder)
+    private async Task<string?> GetNextImage(StorageFolder folder)
     {
         var files = await folder.GetFilesAsync();
 

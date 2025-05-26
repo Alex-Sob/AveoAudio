@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace AveoAudio;
+﻿namespace AveoAudio;
 
 public static class CollectionExtensions
 {
@@ -11,9 +7,9 @@ public static class CollectionExtensions
         foreach (var item in items) collection.Add(item);
     }
 
-    public static T Random<T>(this IEnumerable<T> source)
+    public static T? Random<T>(this IEnumerable<T> source)
     {
-        T result = default;
+        T? result = default;
         int min = int.MaxValue;
         var random = new Random();
 

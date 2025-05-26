@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 
 using Windows.Storage;
 using Windows.System;
@@ -13,7 +10,7 @@ public static class SettingsManager
     private const string FileName = "AppSettings.json";
     private const string FolderName = nameof(AveoAudio);
 
-    public static Task<AppSettings> GetSettingsAsync() => GetDataAsync<AppSettings>();
+    public static Task<AppSettings?> GetSettingsAsync() => GetDataAsync<AppSettings>();
 
     public static async Task OpenLocalSettings()
     {
@@ -29,7 +26,7 @@ public static class SettingsManager
         return await defaultFile.CopyAsync(folder);
     }
 
-    private static async Task<T> GetDataAsync<T>()
+    private static async Task<T?> GetDataAsync<T>()
     {
         var file = await GetFileAsync().ConfigureAwait(false);
         using var stream = await file.OpenAsync(FileAccessMode.Read);

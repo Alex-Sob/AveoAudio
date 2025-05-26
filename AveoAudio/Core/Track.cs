@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.Collections.Specialized;
 
 using Windows.Storage;
 using Windows.Storage.FileProperties;
@@ -12,27 +9,24 @@ public class Track
 {
     public const string Extension = ".mp3";
 
-    private static TrackDataParser parser;
-    private string name;
+    private static readonly TrackDataParser parser;
+    private string? name;
 
-    static Track()
-    {
-        parser = new(App.Current.AppSettings);
-    }
+    static Track() => parser = new(App.Current.AppSettings);
 
     public BitVector32 CustomTags { get; internal set; }
 
     public DateTime DateAdded { get; private set; }
 
-    public StorageFile File { get; private set; }
+    public required StorageFile File { get; init; }
 
     public string Name => this.name ?? (name = GetName(this.File.Name).ToString());
 
-    public string Genre { get; private set; }
+    public required string Genre { get; init; }
 
     public DateTime? LastPlayedOn => HistoryManager.GetLastPlayedOn(this);
 
-    public MusicProperties Properties { get; private set; }
+    public required MusicProperties Properties { get; init; }
 
     public TagList Tags { get; internal set; }
 
@@ -40,7 +34,7 @@ public class Track
 
     public Weather Weather { get; internal set; }
 
-    public static event EventHandler<TrackEventArgs> TagsUpdated;
+    public static event EventHandler<TrackEventArgs>? TagsUpdated;
 
     public static ReadOnlySpan<char> GetName(ReadOnlySpan<char> pathOrFileName) => Path.GetFileNameWithoutExtension(pathOrFileName);
 

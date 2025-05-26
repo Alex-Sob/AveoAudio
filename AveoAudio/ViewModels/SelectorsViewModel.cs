@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AveoAudio.ViewModels;
+﻿namespace AveoAudio.ViewModels;
 
 public class SelectorsViewModel : NotificationBase
 {
@@ -8,7 +6,7 @@ public class SelectorsViewModel : NotificationBase
 
     public bool CanSelectWeather { get; set; } = true;
 
-    public string SelectedTimeOfDay
+    public string? SelectedTimeOfDay
     {
         get => this.TimeOfDay.ToString();
         set
@@ -29,7 +27,7 @@ public class SelectorsViewModel : NotificationBase
         set => this.SetProperty(ref this.isOpen, value);
     }
 
-    public string SelectedWeather
+    public string? SelectedWeather
     {
         get => this.Weather.ToString();
         set
@@ -45,7 +43,7 @@ public class SelectorsViewModel : NotificationBase
 
     public Weather? Weather { get; private set; }
 
-    private static T? ParseEnum<T>(string value) where T : struct
+    private static T? ParseEnum<T>(string? value) where T : struct
     {
         return !string.IsNullOrEmpty(value) ? Enum.Parse<T>(value) : null;
     }

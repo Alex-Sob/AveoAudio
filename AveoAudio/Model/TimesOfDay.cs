@@ -1,23 +1,20 @@
-﻿using System;
+﻿namespace AveoAudio;
 
-namespace AveoAudio
+[Flags]
+public enum TimesOfDay
 {
-    [Flags]
-    public enum TimesOfDay
-    {
-        None = 0,
+    None = 0,
 
-        EarlyMorn = 1,
-        LateMorn = 2,
-        Afternoon = 4,
-        EarlyEvening = 8,
-        Sunset = 16,
-        Twilight = 32,
-        Night = 64,
+    EarlyMorn = 1,
+    LateMorn = 2,
+    Afternoon = 4,
+    EarlyEvening = 8,
+    Sunset = 16,
+    Twilight = 32,
+    Night = 64,
 
-        Morning = 3,
-        Daytime = 31,
-        Evening = 56,
-        SunDown = 96,
-    }
+    Morning = 3,
+    Daytime = 31,
+    Evening = 56,
+    SunDown = 96,
 }

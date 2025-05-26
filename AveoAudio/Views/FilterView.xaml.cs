@@ -13,7 +13,7 @@ public sealed partial class FilterView : UserControl
         this.DataContextChanged += OnDataContextChanged;
     }
 
-    public FilterViewModel ViewModel { get; set; }
+    public FilterViewModel? ViewModel { get; set; }
 
     private void OnDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AveoAudio;
+﻿namespace AveoAudio;
 
 public readonly ref struct Tag(ReadOnlySpan<char> rawTag, int start)
 {
