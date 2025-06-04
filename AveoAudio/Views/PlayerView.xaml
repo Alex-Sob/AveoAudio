@@ -1,0 +1,95 @@
+<UserControl
+    x:Class="AveoAudio.Views.PlayerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:AveoAudio.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="TrackBoxBackground" Opacity="0.2" Color="Black" />
+        <SolidColorBrush x:Key="TrackInfoBackground" Opacity="0.2" Color="Black" />
+
+        <views:DateConverter x:Key="DateConverter" />
+
+        <Style x:Key="TrackBox" TargetType="ContentControl">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContentControl">
+                        <Border Background="{StaticResource TrackBoxBackground}" CornerRadius="15">
+                            <ContentPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TrackInfoContainer" TargetType="Grid">
+            <Setter Property="Background" Value="{StaticResource TrackInfoBackground}" />
+            <Setter Property="Padding" Value="20 10" />
+        </Style>
+
+        <Style x:Key="TrackInfoIcon" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="TrackInfoText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="WhiteSmoke" />
+        </Style>
+
+        <Style x:Key="TagIcon" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+            <Setter Property="FontSize" Value="20" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="Transparent"
+          ManipulationMode="TranslateX,TranslateY"
+          ManipulationCompleted="OnImageManipulationCompleted"
+          Tapped="{x:Bind ViewModel.TogglePlayback}">
+
+        <ContentControl
+            Margin="20" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+            Style="{StaticResource TrackBox}"
+            Visibility="{x:Bind ViewModel.HasCurrentTrack, Mode=OneWay}"
+            DoubleTapped="{x:Bind ViewModel.ViewTrackInQueue}"
+            Tapped="OnPlayerElementTapped">
+
+            <Grid RowDefinitions="Auto, Auto">
+                <StackPanel Margin="20 20 20 20">
+                    <TextBlock Text="{x:Bind ViewModel.CurrentTrack, Mode=OneWay}" FontSize="24" />
+                    <TextBlock Text="{x:Bind ViewModel.CurrentTrack.Genre, Mode=OneWay}" Margin="0 10 0 0" />
+                    <TextBlock Text="{x:Bind ViewModel.CurrentTrack.Year, Mode=OneWay}" />
+                </StackPanel>
+
+                <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Style="{StaticResource TrackInfoContainer}" Visibility="{x:Bind ViewModel.IsPaused, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xe8ec;" Foreground="Violet" Margin="0 2 0 0" Style="{StaticResource TrackInfoIcon}" />
+                        <TextBlock Text="{x:Bind ViewModel.DisplayTags, Mode=OneWay, TargetNullValue='[none]'}" Margin="5 0 0 0" Style="{StaticResource TrackInfoText}" />
+
+                        <TextBlock Text="&#xe710;" Foreground="DeepSkyBlue" Margin="20 2 4 0" Style="{StaticResource TrackInfoIcon}" />
+                        <TextBlock Text="{x:Bind ViewModel.CurrentTrack.DateAdded, Converter={StaticResource DateConverter}, Mode=OneWay}" Style="{StaticResource TrackInfoText}" />
+
+                        <TextBlock Text="&#xedb5;" Foreground="Turquoise" Margin="20 1 5 0" Style="{StaticResource TrackInfoIcon}" Visibility="{x:Bind ViewModel.HasDateLastPlayed, Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind ViewModel.CurrentTrack.LastPlayedOn, Converter={StaticResource DateConverter}, Mode=OneWay}" Style="{StaticResource TrackInfoText}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="20 0 0 0">
+                        <TextBlock Text="&#xe706;" Foreground="Yellow" Style="{StaticResource TagIcon}" views:VisibilityHelper.IsVisible="{x:Bind ViewModel.HasTag('Sun'), Mode=OneWay}" />
+                        <TextBlock Text="&#xe716;" Foreground="DodgerBlue" Margin="5 0 0 0" Style="{StaticResource TagIcon}" views:VisibilityHelper.IsVisible="{x:Bind ViewModel.HasTag('public'), Mode=OneWay}" />
+                        <TextBlock Text="&#xee7e;" Foreground="PaleVioletRed" Margin="5 0 0 0" Style="{StaticResource TagIcon}" views:VisibilityHelper.IsVisible="{x:Bind ViewModel.HasTag('private'), Mode=OneWay}" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </ContentControl>
+
+        <Button
+            Margin="5" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+            Style="{StaticResource Button}" FontSize="16"
+            Click="{x:Bind ViewModel.RefreshImage}" Tapped="OnPlayerElementTapped">&#xe72c;</Button>
+    </Grid>
+</UserControl>

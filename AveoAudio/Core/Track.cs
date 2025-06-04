@@ -34,6 +34,8 @@ public class Track
 
     public Weather Weather { get; internal set; }
 
+    public uint? Year => this.Properties.Year > 0 ? this.Properties.Year : null;
+
     public static event EventHandler<TrackEventArgs>? TagsUpdated;
 
     public static ReadOnlySpan<char> GetName(ReadOnlySpan<char> pathOrFileName) => Path.GetFileNameWithoutExtension(pathOrFileName);

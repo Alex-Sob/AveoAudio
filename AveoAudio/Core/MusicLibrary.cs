@@ -72,7 +72,9 @@ public class MusicLibrary
     public async Task<IEnumerable<Track>> LoadNewest(int maxCount)
     {
         var root = await StorageFolder.GetFolderFromPathAsync(watcher.Path);
-        var files = await root.GetFilesAsync(CommonFileQuery.OrderByDate, 0, (uint)maxCount);
+        var query = root.CreateFileQueryWithOptions(new QueryOptions(CommonFileQuery.OrderByDate, [Track.Extension]));
+
+        var files = await query.GetFilesAsync(0, (uint)maxCount);
         var tasks = files.Select(file => LoadFromFile(file));
 
         return await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -104,6 +106,7 @@ public class MusicLibrary
 
     private async Task<Track> LoadFromPath(string path, string? genre = null)
     {
+        await Task.Delay(1000);
         var file = await StorageFile.GetFileFromPathAsync(path);
         return await LoadFromFile(file, genre);
     }

@@ -17,6 +17,7 @@
             <SolidColorBrush x:Key="TrackButtonActiveBrush" Color="White" />
             <SolidColorBrush x:Key="TrackInfoTextBrush" Color="SlateGray" />
 
+            <views:DateConverter x:Key="DateConverter" />
             <views:BoolToStringConverter x:Key="BoolToColumnSpanConverter" TrueValue="1" FalseValue="2" />
 
             <CollectionViewSource x:Key="TagGroups" Source="{Binding TagGroups}" IsSourceGrouped="True" />
@@ -154,10 +155,11 @@
                             Visibility="{Binding IsSelected}"
                             Click="{x:Bind Tracklist.Play}" />
 
-                        <!-- Use WrapPanel, play icon edb5 -->
+                        <!-- Use play icon edb5 -->
                         <TextBlock Grid.Column="1" Margin="10 0" VerticalAlignment="Center" TextWrapping="Wrap">
                             <Run Text="{x:Bind Track.Name}" />
-                            <Run Text="{x:Bind sys:String.Format(x:Null, '   {0:m}', DatePlayed), Mode=OneWay}" FontStyle="Italic" Foreground="SteelBlue" />
+                            <Run Text="   " />
+                            <Run Text="{x:Bind DatePlayed, Converter={StaticResource DateConverter}, Mode=OneWay}" FontStyle="Italic" Foreground="SteelBlue" />
                         </TextBlock>
 
                         <TextBox
@@ -176,9 +178,9 @@
                             Click="{x:Bind UpdateTags}" />
 
                         <StackPanel Grid.Row="1" Grid.Column="1" Margin="10 0" Orientation="Horizontal" Visibility="{Binding IsSelected}">
-                            <TextBlock Foreground="{StaticResource TrackInfoTextBrush}" Text="{x:Bind Track.Genre}" />
-                            <TextBlock Foreground="{StaticResource TrackInfoTextBrush}" Text="&#xe710;" FontFamily="Segoe Fluent Icons" FontSize="10" Margin="10 0 1 0" VerticalAlignment="Center" />
-                            <TextBlock Foreground="{StaticResource TrackInfoTextBrush}" Text="{x:Bind Track.DateAdded.ToString('dd.MM.yyyy', x:Null)}" />
+                            <TextBlock Text="{x:Bind Track.Genre}" Foreground="{StaticResource TrackInfoTextBrush}" />
+                            <TextBlock Text="&#xe710;" Foreground="SteelBlue" FontFamily="Segoe Fluent Icons" FontSize="13" Margin="20 2 2 0" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind Track.DateAdded, Converter={StaticResource DateConverter}}" Foreground="{StaticResource TrackInfoTextBrush}" />
                         </StackPanel>
 
                         <Button

@@ -10,12 +10,13 @@ namespace AveoAudio.ViewModels;
 
 public class MainViewModel : NotificationBase
 {
-    private enum Pane
+    private enum View
     {
         Filter,
         Player,
         Queue,
-        History
+        History,
+        Library
     }
 
     private readonly AppSettings appSettings;
@@ -24,7 +25,6 @@ public class MainViewModel : NotificationBase
     private readonly ListeningQueue queue;
 
     private string? busyText;
-    private Track? currentTrack;
     private ImageSource? imageSource;
     private bool listened;
     private MediaPlaybackList? playbackList;
@@ -40,6 +40,7 @@ public class MainViewModel : NotificationBase
 
         this.Selectors = new SelectorsViewModel();
         this.Filter = new FilterViewModel(this.Selectors, this.appSettings);
+        this.Player = new PlayerViewModel(mediaPlayer, this.queue);
         this.Queue = new QueueViewModel(this.queue);
         this.History = new HistoryViewModel(this.queue);
         this.Library = new LibraryViewModel(this.queue);
@@ -47,7 +48,6 @@ public class MainViewModel : NotificationBase
         Track.TagsUpdated += OnTagsUpdated;
         this.queue.CollectionChanged += this.OnQueueChanged;
         this.mediaPlayer.PlaybackSession.PositionChanged += this.OnPositionChanged;
-        this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
     }
 
     public string? BusyText
@@ -60,43 +60,7 @@ public class MainViewModel : NotificationBase
         }
     }
 
-    public Track? CurrentTrack
-    {
-        get => this.currentTrack;
-        set
-        {
-            if (this.SetProperty(ref this.currentTrack, value))
-            {
-                this.OnPropertyChanged(nameof(this.HasCurrentTrack));
-                this.OnPropertyChanged(nameof(this.DisplayTags));
-            }
-        }
-    }
-
-    public string DisplayTags
-    {
-        get
-        {
-            if (!this.HasCurrentTrack) return "";
-
-            int current = 0;
-            Span<char> span = stackalloc char[this.currentTrack!.Tags.Length + 1];
-
-            foreach (ReadOnlySpan<char> tag in this.currentTrack.Tags)
-            {
-                if (Enum.TryParse<TimesOfDay>(tag, out _)) continue;
-                tag.CopyTo(span.Slice(current, tag.Length));
-                current += tag.Length;
-                span[current++] = ' ';
-            }
-
-            return span[..current].ToString();
-        }
-    }
-
     public FilterViewModel Filter { get; }
-
-    public bool HasCurrentTrack => this.currentTrack != null;
 
     public HistoryViewModel History { get; }
 
@@ -108,11 +72,9 @@ public class MainViewModel : NotificationBase
 
     public bool IsBusy => this.BusyText != null;
 
-    public bool IsPlaying => this.mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
-
-    public bool IsPaused => !this.IsPlaying;
-
     public LibraryViewModel Library { get; }
+
+    public PlayerViewModel Player { get; }
 
     public MediaPlaybackList? Playlist
     {
@@ -137,17 +99,6 @@ public class MainViewModel : NotificationBase
     public void RebuildPlaylist()
     {
         _ = this.GetBusy(this.RebuildPlaylistAsync(), "Building Playlist");
-    }
-
-    public void RefreshImage() => _ = UpdateImageAsync();
-
-    public void ViewInQueue()
-    {
-        ShowPane(Pane.Queue);
-        if (this.HasCurrentTrack)
-        {
-            this.Queue.GoToTrack(this.CurrentTrackIndex);
-        }
     }
 
     public async Task GetBusy(Task task, string description)
@@ -184,7 +135,7 @@ public class MainViewModel : NotificationBase
 
     public void Play()
     {
-        ShowPane(Pane.Player);
+        ShowView(nameof(View.Player));
         this.mediaPlayer.Play();
     }
 
@@ -199,14 +150,21 @@ public class MainViewModel : NotificationBase
         this.mediaPlayer.PlaybackSession.Position = TimeSpan.Zero;
     }
 
-    public void TogglePlayback()
-    {
-        var state = this.mediaPlayer.PlaybackSession.PlaybackState;
+    public void ShowView(string name) => this.SelectedPane = (int)Enum.Parse<View>(name);
 
-        if (state == MediaPlaybackState.Playing)
-            this.mediaPlayer.Pause();
-        else
-            this.mediaPlayer.Play();
+    public async Task UpdateImageAsync()
+    {
+        var timeOfDay = this.Selectors.SelectedTimeOfDay;
+        var weather = this.Selectors.SelectedWeather;
+
+        var imagePath = await this.imageManager.GetNextImage(Season.ToString(), timeOfDay, weather);
+        this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
+    }
+
+    public void ViewTrackInQueue()
+    {
+        ShowView(nameof(View.Queue));
+        this.Queue.GoToCurrent();
     }
 
     private static void AddToPlaylist(MediaPlaybackList playlist, Track track)
@@ -253,7 +211,7 @@ public class MainViewModel : NotificationBase
         RecreatePlaylist();
         await UpdateImageAsync();
 
-        ShowPane(Pane.Player);
+        ShowView(nameof(View.Player));
     }
 
     private async Task InitializeImage()
@@ -275,30 +233,19 @@ public class MainViewModel : NotificationBase
         }
     }
 
-    private void OnPlaybackStateChanged(MediaPlaybackSession sender, object args)
-    {
-        App.Current.Dispatch(() =>
-        {
-            this.OnPropertyChanged(nameof(this.IsPlaying));
-            this.OnPropertyChanged(nameof(this.IsPaused));
-        });
-    }
-
-    private void OnPositionChanged(MediaPlaybackSession sender, object args)
+    private void OnPositionChanged(MediaPlaybackSession session, object args)
     {
         if (this.CurrentTrackIndex < 0) return;
-
-        var session = this.mediaPlayer.PlaybackSession;
 
         if (!this.listened && session.Position.TotalSeconds > session.NaturalDuration.TotalSeconds * 0.9)
         {
             this.listened = true;
-            HistoryManager.Add(this.currentTrack!);
+            HistoryManager.Add(this.queue.Current!);
 
             App.Current.Dispatch(() =>
             {
                 this.Queue.MarkCurrentAsPlayed();
-                this.History.Add(this.currentTrack!);
+                this.History.Add(this.queue.Current!);
             });
         }
     }
@@ -311,7 +258,7 @@ public class MainViewModel : NotificationBase
         }
     }
 
-    private void OnTrackChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
+    private void OnTrackChanged(MediaPlaybackList playlist, CurrentMediaPlaybackItemChangedEventArgs args)
     {
         this.listened = false;
         var newIndex = this.CurrentTrackIndex;
@@ -320,31 +267,21 @@ public class MainViewModel : NotificationBase
 
         App.Current.Dispatch(() =>
         {
-            this.CurrentTrack = this.queue[newIndex];
-
             if (newIndex > this.queue.CurrentIndex)
             {
                 this.queue.MoveNext();
 
-                if (this.Playlist!.Items.Count == this.queue.Count && this.queue.HasNext)
-                    AddToPlaylist(this.Playlist, this.queue.Next!);
+                if (this.queue.HasNext)
+                    AddToPlaylist(playlist, this.queue.Next);
             }
             else
             {
                 this.queue.MoveBack();
+
+                if (playlist.Items.Count > this.queue.Count + 1)
+                    playlist.Items.RemoveAt(playlist.Items.Count - 1);
             }
         });
-    }
-
-    private void ShowPane(Pane pane) => this.SelectedPane = (int)pane;
-
-    private async Task UpdateImageAsync()
-    {
-        var timeOfDay = this.Selectors.SelectedTimeOfDay;
-        var weather = this.Selectors.SelectedWeather;
-
-        var imagePath = await this.imageManager.GetNextImage(Season.ToString(), timeOfDay, weather);
-        this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
     }
 
     private void RecreatePlaylist()

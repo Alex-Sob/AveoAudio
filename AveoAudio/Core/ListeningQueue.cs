@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AveoAudio;
 
@@ -17,6 +18,7 @@ public class ListeningQueue(int capacity) : INotifyCollectionChanged
 
     public int CurrentIndex { get; private set; } = -1;
 
+    [MemberNotNullWhen(true, nameof(Next))]
     public bool HasNext => this.CurrentIndex < this.source.Count - 1;
 
     public Track? Next => this.HasNext ? this.source[this.CurrentIndex + 1] : null;

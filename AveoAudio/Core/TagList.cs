@@ -1,13 +1,13 @@
 ﻿namespace AveoAudio;
 
-public readonly struct TagList
+// Use Memory<T>?
+public readonly struct TagList(string rawTags)
 {
-    private readonly string rawTags;
-
-    // TODO: Use Memory
-    public TagList(string rawTags) => this.rawTags = rawTags;
+    private readonly string rawTags = rawTags;
 
     public static implicit operator string(TagList tagList) => tagList.rawTags;
+
+    public bool IsEmpty => this.rawTags.Length == 0;
 
     public int Length => this.rawTags.Length;
 

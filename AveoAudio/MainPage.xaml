@@ -17,12 +17,8 @@
         <SolidColorBrush x:Key="PaneBackground" Opacity="0.8" Color="WhiteSmoke" />
         <SolidColorBrush x:Key="OverlayBackground" Opacity="0.8" Color="White" />
         <SolidColorBrush x:Key="PivotHeaderBackground" Color="LightGray" Opacity="0.5" />
-        <SolidColorBrush x:Key="CurrentTrackBackground" Opacity="0.2" Color="Black" />
-        <SolidColorBrush x:Key="SeparatorBackground" Opacity="0.6" Color="White" />
         <SolidColorBrush x:Key="MediaPlayerBackground" Color="WhiteSmoke" Opacity="0.3" />
         <SolidColorBrush x:Key="BusyIndicatorBackground" Opacity="0.3" Color="Black" />
-
-        <views:DateConverter x:Key="DateConverter" />
 
         <Style TargetType="SplitView">
             <Setter Property="DisplayMode" Value="CompactInline" />
@@ -283,20 +279,6 @@
             <Setter Property="Margin" Value="0" />
         </Style>
 
-        <Style x:Key="CurrentTrackBox" TargetType="ContentControl">
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ContentControl">
-                        <Border Background="{StaticResource CurrentTrackBackground}" CornerRadius="5" HorizontalAlignment="Left" Margin="20" Padding="20" VerticalAlignment="Bottom">
-                            <ContentPresenter />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="BusyIndicator" TargetType="ContentControl">
             <Setter Property="FontSize" Value="20" />
             <Setter Property="Foreground" Value="White" />
@@ -321,11 +303,7 @@
 
         <SplitView x:Name="splitView" CompactPaneLength="62" IsPaneOpen="{x:Bind ViewModel.Selectors.IsOpen, Mode=TwoWay}">
             <SplitView.Pane>
-                <Grid Margin="1 0 0 0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                <Grid Margin="1 0 0 0" RowDefinitions="Auto, *">
                     <Button x:Name="HamburgerButton" Margin="0 0 0 1"
                             Style="{StaticResource HamburgerButtonStyle}"
                             Click="{x:Bind ViewModel.OpenTilesPane}" />
@@ -335,63 +313,14 @@
                 </Grid>
             </SplitView.Pane>
             <SplitView.Content>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
+                <Grid RowDefinitions="*, Auto">
                     <Pivot Style="{StaticResource Pivot}" ItemContainerStyle="{StaticResource PivotItem}" SelectedIndex="{x:Bind ViewModel.SelectedPane, Mode=TwoWay}">
                         <PivotItem Header="Filter">
                             <views:FilterView DataContext="{x:Bind ViewModel.Filter}" Background="{StaticResource OverlayBackground}" />
                         </PivotItem>
 
-                        <PivotItem
-                            Header="Player"
-                            ManipulationMode="TranslateX,TranslateY"
-                            ManipulationCompleted="OnImageManipulationCompleted"
-                            Tapped="{x:Bind ViewModel.TogglePlayback}">
-                            <Grid>
-                                <ContentControl
-                                    Style="{StaticResource CurrentTrackBox}"
-                                    Visibility="{x:Bind ViewModel.HasCurrentTrack, Mode=OneWay}"
-                                    DoubleTapped="{x:Bind ViewModel.ViewInQueue}"
-                                    Tapped="OnPlayerElementTapped">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition />
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                        </Grid.RowDefinitions>
-                                        <TextBlock Text="{x:Bind ViewModel.CurrentTrack, Mode=OneWay}" FontSize="24" />
-                                        <StackPanel Grid.Row="1">
-                                            <TextBlock Text="{x:Bind ViewModel.CurrentTrack.Genre, Mode=OneWay}" Margin="0 10 0 0" />
-                                            <TextBlock Text="{x:Bind ViewModel.CurrentTrack.Properties.Year, Mode=OneWay}" />
-                                            <TextBlock />
-                                        </StackPanel>
-                                        <Border Grid.Column="1" Grid.RowSpan="2" Margin="10 0 0 0" BorderThickness="1 0 0 0" BorderBrush="{StaticResource SeparatorBackground}" Visibility="{x:Bind ViewModel.IsPaused, Mode=OneWay}" />
-                                        <StackPanel Grid.Column="1" Grid.Row="1" Margin="20 0 0 0" Visibility="{x:Bind ViewModel.IsPaused, Mode=OneWay}">
-                                            <TextBlock Margin="0 10 0 0">Added</TextBlock>
-                                            <TextBlock>Tags</TextBlock>
-                                            <TextBlock>Last Played</TextBlock>
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontSize="20" FontFamily="Segoe MDL2 Assets" Foreground="Snow" Text="&#xE946;" Visibility="{x:Bind ViewModel.IsPaused, Mode=OneWay}" />
-                                        <StackPanel Grid.Column="2" Grid.Row="1" Margin="20 0 0 0" Visibility="{x:Bind ViewModel.IsPaused, Mode=OneWay}">
-                                            <TextBlock Text="{x:Bind ViewModel.CurrentTrack.DateAdded, Mode=OneWay, Converter={StaticResource DateConverter}, ConverterParameter=relative}" Margin="0 10 0 0" />
-                                            <TextBlock Text="{x:Bind ViewModel.DisplayTags, Mode=OneWay}" />
-                                            <TextBlock Text="{x:Bind ViewModel.CurrentTrack.LastPlayedOn, Mode=OneWay, Converter={StaticResource DateConverter}, ConverterParameter=dd.MM.yyyy}" />
-                                        </StackPanel>
-                                    </Grid>
-                                </ContentControl>
-                                <Button
-                                    Margin="5" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                                    Style="{StaticResource Button}" FontSize="16"
-                                    Click="{x:Bind ViewModel.RefreshImage}" Tapped="OnPlayerElementTapped">&#xe72c;</Button>
-                            </Grid>
+                        <PivotItem Header="Player">
+                            <views:PlayerView DataContext="{x:Bind ViewModel.Player}" />
                         </PivotItem>
 
                         <PivotItem Header="Queue">

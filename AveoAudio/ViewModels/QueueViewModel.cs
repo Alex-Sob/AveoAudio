@@ -17,7 +17,7 @@ public class QueueViewModel : TracklistViewModel
 
     public IList<TrackViewModel> Queue => this.Tracks;
 
-    public void GoToTrack(int index) => this.SelectedTrack = this.Queue[index];
+    public void GoToCurrent() => this.SelectedTrack = this.Queue[this.currentIndex];
 
     private void Insert(int index) => this.Insert(this.queue[index], index);
 
