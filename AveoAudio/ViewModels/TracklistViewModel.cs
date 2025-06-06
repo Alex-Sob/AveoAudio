@@ -46,14 +46,6 @@ public class TracklistViewModel : NotificationBase
 
     public void Insert(Track track, int index) => this.Tracks.Insert(index, new TrackViewModel(this, track));
 
-    public async void LaunchFolder()
-    {
-        var file = this.SelectedTrack!.Track.File;
-        var folder = await file.GetParentAsync();
-
-        await Launcher.LaunchFolderAsync(folder, new FolderLauncherOptions { ItemsToSelect = { file } });
-    }
-
     public void Load(IEnumerable<Track> tracks) => this.Load(tracks.Select(t => new TrackViewModel(this, t)));
 
     public void Load(IEnumerable<TrackViewModel> tracks)

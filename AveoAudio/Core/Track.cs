@@ -9,14 +9,12 @@ public class Track
 {
     public const string Extension = ".mp3";
 
-    private static readonly TrackDataParser parser;
+    private static readonly TrackDataParser parser = new(App.Current.AppSettings);
     private string? name;
-
-    static Track() => parser = new(App.Current.AppSettings);
 
     public BitVector32 CustomTags { get; internal set; }
 
-    public DateTime DateAdded { get; private set; }
+    public DateTime? DateAdded { get; private set; }
 
     public required StorageFile File { get; init; }
 
@@ -51,7 +49,7 @@ public class Track
     public static async Task<Track> Load(StorageFile file, string genre)
     {
         var props = await file.Properties.GetMusicPropertiesAsync().AsTask().ConfigureAwait(false);
-        var (dateAdded, rawTags) = TrackDataParser.ExtractCustomProperties(file, props);
+        var (dateAdded, rawTags) = TrackDataParser.ExtractCustomProperties(props);
 
         var track = new Track
         {
@@ -70,7 +68,7 @@ public class Track
 
     public async Task UpdateTags(string rawTags)
     {
-        this.Properties.Subtitle = $"{this.DateAdded:dd.MM.yyyy};{rawTags}";
+        this.Properties.Subtitle = $"{this.DateAdded ?? this.File.DateCreated:dd.MM.yyyy};{rawTags}";
         await this.Properties.SavePropertiesAsync();
         parser.ParseTags(this, rawTags);
         TagsUpdated?.Invoke(null, new TrackEventArgs(this));

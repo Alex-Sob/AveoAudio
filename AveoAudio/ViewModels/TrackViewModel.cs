@@ -1,4 +1,6 @@
-﻿namespace AveoAudio.ViewModels;
+﻿using Windows.System;
+
+namespace AveoAudio.ViewModels;
 
 public class TrackViewModel(TracklistViewModel tracklist, Track track) : NotificationBase
 {
@@ -15,6 +17,8 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
     }
 
     public bool HasChanges => this.Tags != this.Track.Tags;
+
+    public bool IsInvalid => !Track.DateAdded.HasValue;
 
     public bool IsCurrent
     {
@@ -54,6 +58,12 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
         {
             tag.IsChecked = this.tagsBuilder.HasTag(tag);
         }
+    }
+
+    public void OpenFolder()
+    {
+        var path = Path.GetDirectoryName(this.Track.File.Path);
+        _ = Launcher.LaunchFolderPathAsync(path, new FolderLauncherOptions { ItemsToSelect = { this.Track.File } });
     }
 
     public void UpdateTags() => App.Current.GetBusy(UpdateTagsAsync(), "Updating tags");

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.Globalization;
 
-using Windows.Storage;
 using Windows.Storage.FileProperties;
 
 namespace AveoAudio;
@@ -20,16 +19,14 @@ internal class TrackDataParser
         }
     }
     
-    public static (DateTime dateAdded, string rawTags) ExtractCustomProperties(StorageFile file, MusicProperties props)
+    public static (DateTime? dateAdded, string rawTags) ExtractCustomProperties(MusicProperties props)
     {
-        if (props.Subtitle.Length < 10) return (file.DateCreated.Date, rawTags: "");
+        if (props.Subtitle.Length < 10) return (dateAdded: null, rawTags: "");
 
         var hasDate = DateTime.TryParseExact(props.Subtitle.AsSpan(0, 10), "dd.MM.yyyy", null, DateTimeStyles.None, out var dateAdded);
-        dateAdded = hasDate ? dateAdded : file.DateCreated.Date;
-
         var rawTags = props.Subtitle[10] == ';' ? props.Subtitle[11..] : "";
 
-        return (dateAdded, rawTags);
+        return (hasDate ? dateAdded : null, rawTags);
     }
 
     public void ParseTags(Track track, string rawTags)
