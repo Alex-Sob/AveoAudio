@@ -1,19 +1,24 @@
 ﻿namespace AveoAudio;
 
-// Use Memory<T>?
-public readonly struct TagList(string rawTags)
+public readonly struct TagList(ReadOnlyMemory<char> tags)
 {
-    private readonly string rawTags = rawTags;
+    private readonly ReadOnlyMemory<char> tags = tags;
 
-    public static implicit operator string(TagList tagList) => tagList.rawTags;
+    public TagList(string tags) : this(tags.AsMemory()) { }
 
-    public bool IsEmpty => this.rawTags.Length == 0;
+    public static implicit operator ReadOnlyMemory<char>(TagList tagList) => tagList.tags;
 
-    public int Length => this.rawTags.Length;
+    public bool IsEmpty => this.tags.Length == 0;
 
-    public Enumerator GetEnumerator() => new(this.rawTags);
+    public int Length => this.tags.Length;
 
-    public ref struct Enumerator(string rawTags)
+    public ReadOnlySpan<char> AsSpan() => this.tags.Span;
+
+    public Enumerator GetEnumerator() => new(this.tags);
+
+    public override string ToString() => this.tags.ToString();
+
+    public ref struct Enumerator(ReadOnlyMemory<char> rawTags)
     {
         private int current;
 
@@ -23,9 +28,9 @@ public readonly struct TagList(string rawTags)
         {
             if (current >= rawTags.Length) return false;
 
-            var index = rawTags.IndexOf(',', current);
-            var length = index >= 0 ? index - current : rawTags.Length - current;
-            this.Current = new Tag(rawTags.AsSpan(current, length), current);
+            var index = rawTags.Span[current..].IndexOf(',');
+            var length = index >= 0 ? index : rawTags.Length - current;
+            this.Current = new Tag(rawTags.Span.Slice(current, length), current);
             current += length + 1;
 
             return true;

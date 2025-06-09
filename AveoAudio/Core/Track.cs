@@ -49,7 +49,7 @@ public class Track
     public static async Task<Track> Load(StorageFile file, string genre)
     {
         var props = await file.Properties.GetMusicPropertiesAsync().AsTask().ConfigureAwait(false);
-        var (dateAdded, rawTags) = TrackDataParser.ExtractCustomProperties(props);
+        var (dateAdded, tags) = TrackDataParser.ExtractCustomProperties(props);
 
         var track = new Track
         {
@@ -59,18 +59,21 @@ public class Track
             DateAdded = dateAdded
         };
 
-        parser.ParseTags(track, rawTags);
+        parser.ParseTags(track, tags);
 
         return track;
     }
 
     public override string ToString() => this.Name;
 
-    public async Task UpdateTags(string rawTags)
+    public async Task UpdateTags(string tags)
     {
-        this.Properties.Subtitle = $"{this.DateAdded ?? this.File.DateCreated:dd.MM.yyyy};{rawTags}";
+        this.DateAdded ??= this.File.DateCreated.Date;
+        this.Properties.Subtitle = $"{this.DateAdded:dd.MM.yyyy};{tags}";
+
         await this.Properties.SavePropertiesAsync();
-        parser.ParseTags(this, rawTags);
+
+        parser.ParseTags(this, tags.AsMemory());
         TagsUpdated?.Invoke(null, new TrackEventArgs(this));
     }
 }

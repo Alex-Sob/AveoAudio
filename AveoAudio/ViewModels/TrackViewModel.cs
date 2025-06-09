@@ -16,7 +16,7 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
         set => this.SetProperty(ref this.datePlayed, value);
     }
 
-    public bool HasChanges => this.Tags != this.Track.Tags;
+    public bool HasChanges => !this.Track.Tags.AsSpan().Equals(this.Tags, StringComparison.Ordinal);
 
     public bool IsInvalid => !Track.DateAdded.HasValue;
 
@@ -38,7 +38,7 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
 
     public string Tags
     {
-        get => this.tagsBuilder.Tags;
+        get => this.tagsBuilder.Tags.ToString();
         set
         {
             this.SetProperty(ref this.tagsBuilder, new TagListBuilder(value));
@@ -104,6 +104,8 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
     private async Task UpdateTagsAsync()
     {
         await this.Track.UpdateTags(this.Tags);
+
         this.OnPropertyChanged(nameof(HasChanges));
+        this.OnPropertyChanged(nameof(IsInvalid));
     }
 }

@@ -101,7 +101,7 @@ public class TracklistViewModel : NotificationBase
     {
         foreach (var trackViewModel in this.Tracks)
         {
-            if (trackViewModel.Track == e.Track) trackViewModel.Tags = e.Track.Tags;
+            if (trackViewModel.Track == e.Track) trackViewModel.Tags = e.Track.Tags.ToString();
         }
     }
 }

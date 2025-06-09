@@ -11,20 +11,20 @@ public struct TagListBuilder(TagList tags)
 
     public void ToggleBestTimeOfDay(TimesOfDay timesOfDay)
     {
-        var tag = timesOfDay.ToString();
+        var timeOfDay = timesOfDay.ToString();
 
-        if (!FindTag(this.Tags, tag, out var result))
+        if (!FindTag(this.Tags, timeOfDay, out var tag))
         {
-            AddTag(tag, '!');
+            AddTag(timeOfDay, "!");
             return;
         }
 
-        string value = this.Tags;
+        var span = this.Tags.AsSpan();
 
-        if (result.HasToken)
-            this.Tags = new TagList(value.Remove(result.End, 1));
+        if (tag.HasToken)
+            this.Tags = new TagList(string.Concat(span[..tag.End], span[(tag.End + 1)..]));
         else
-            this.Tags = new TagList(value.Insert(result.End + 1, "!"));
+            this.Tags = new TagList(string.Concat(span[..(tag.End + 1)], "!", span[(tag.End + 1)..]));
     }
 
     public void ToggleTag(string tag)
@@ -52,23 +52,21 @@ public struct TagListBuilder(TagList tags)
         return false;
     }
 
-    private void AddTag(string tag, char? token = null)
+    private void AddTag(string tag, string? token = null)
     {
         if (this.Tags.Length > 0)
-            this.Tags = new TagList(this.Tags + ',' + tag + token);
+            this.Tags = new TagList(string.Concat(this.Tags.AsSpan(), ",", tag, token));
         else
             this.Tags = new TagList(tag);
     }
 
     private void RemoveTag(Tag tag)
     {
-        string value = this.Tags;
+        var value = this.Tags.AsSpan();
 
         if (tag.End == value.Length - 1)
-            value = tag.Start > 0 ? value[..(tag.Start - 1)] : value[..tag.Start];
+            this.Tags = new TagList(tag.Start > 0 ? value[..(tag.Start - 1)].ToString() : "");
         else
-            value = value.Remove(tag.Start, tag.End - tag.Start + 2);
-
-        this.Tags = new TagList(value);
+            this.Tags = new TagList(string.Concat(value[..tag.Start], value[(tag.End + 2)..]));
     }
 }

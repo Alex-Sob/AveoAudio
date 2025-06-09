@@ -19,23 +19,25 @@ internal class TrackDataParser
         }
     }
     
-    public static (DateTime? dateAdded, string rawTags) ExtractCustomProperties(MusicProperties props)
+    public static (DateTime? dateAdded, ReadOnlyMemory<char> tags) ExtractCustomProperties(MusicProperties props)
     {
-        if (props.Subtitle.Length < 10) return (dateAdded: null, rawTags: "");
+        var subtitle = props.Subtitle;
 
-        var hasDate = DateTime.TryParseExact(props.Subtitle.AsSpan(0, 10), "dd.MM.yyyy", null, DateTimeStyles.None, out var dateAdded);
-        var rawTags = props.Subtitle[10] == ';' ? props.Subtitle[11..] : "";
+        if (subtitle.Length < 10) return (dateAdded: null, tags: ReadOnlyMemory<char>.Empty);
+
+        var hasDate = DateTime.TryParseExact(subtitle.AsSpan(0, 10), "dd.MM.yyyy", null, DateTimeStyles.None, out var dateAdded);
+        var rawTags = subtitle[10] == ';' ? subtitle.AsMemory(11) : ReadOnlyMemory<char>.Empty;
 
         return (hasDate ? dateAdded : null, rawTags);
     }
 
-    public void ParseTags(Track track, string rawTags)
+    public void ParseTags(Track track, ReadOnlyMemory<char> tags)
     {
         var timesOfDay = default(TimesOfDay);
         var customTags = new BitVector32();
         var weather = Weather.None;
 
-        track.Tags = new TagList(rawTags);
+        track.Tags = new TagList(tags);
 
         var alternate = this.customTagsMap.GetAlternateLookup<ReadOnlySpan<char>>();
 
