@@ -1,4 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using AveoAudio.Core;
+
+using System.Collections.Concurrent;
+using System.Diagnostics;
 
 using Windows.Storage;
 using Windows.Storage.Search;
@@ -44,6 +47,8 @@ public class MusicLibrary
 
     public async Task LoadByGenresAsync(IEnumerable<string> genres)
     {
+        var stopwatch = Stopwatch.StartNew();
+
         var folders = await KnownFolders.MusicLibrary.GetFoldersAsync().AsTask().ConfigureAwait(false);
 
         var tasks = from genre in genres
@@ -52,6 +57,9 @@ public class MusicLibrary
                     select LoadTracksAsync(genre, folder);
 
         await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        stopwatch.Stop();
+        Logger.LogInfo($"Loading tracks took {stopwatch.Elapsed} ({string.Join(',', genres)})");
     }
 
     public async Task LoadByNamesAsync(IEnumerable<string> names)

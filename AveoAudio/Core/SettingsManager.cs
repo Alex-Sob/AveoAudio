@@ -8,7 +8,6 @@ namespace AveoAudio;
 public static class SettingsManager
 {
     private const string FileName = "AppSettings.json";
-    private const string FolderName = nameof(AveoAudio);
 
     public static Task<AppSettings?> GetSettingsAsync() => GetDataAsync<AppSettings>();
 
@@ -22,8 +21,8 @@ public static class SettingsManager
     {
         var uri = new Uri($"ms-appx:///Data/{FileName}");
         var defaultFile = await StorageFile.GetFileFromApplicationUriAsync(uri);
-        var folder = await KnownFolders.DocumentsLibrary.GetFolderAsync(FolderName);
-        return await defaultFile.CopyAsync(folder);
+
+        return await defaultFile.CopyAsync(App.Current.DocumentsFolder);
     }
 
     private static async Task<T?> GetDataAsync<T>()
@@ -36,10 +35,7 @@ public static class SettingsManager
 
     private static async Task<StorageFile> GetFileAsync()
     {
-        var folder = await KnownFolders.DocumentsLibrary.TryGetItemAsync(FolderName) as StorageFolder;
-        folder ??= await KnownFolders.DocumentsLibrary.CreateFolderAsync(FolderName);
-
-        var file = await folder.TryGetItemAsync(FileName) as StorageFile;
+        var file = await App.Current.DocumentsFolder.TryGetItemAsync(FileName) as StorageFile;
         return file ??= await CopyDefaultFileAsync().ConfigureAwait(false);
     }
 }
