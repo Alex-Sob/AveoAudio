@@ -6,14 +6,11 @@ public struct TagListBuilder(TagList tags)
 
     public TagList Tags { get; private set; } = tags;
 
-    // TODO: Use enum?
-    public bool HasTag(string tag) => FindTag(this.Tags, tag, out _);
-
     public void ToggleBestTimeOfDay(TimesOfDay timesOfDay)
     {
         var timeOfDay = timesOfDay.ToString();
 
-        if (!FindTag(this.Tags, timeOfDay, out var tag))
+        if (!this.Tags.FindTag(timeOfDay, out var tag))
         {
             AddTag(timeOfDay, "!");
             return;
@@ -29,27 +26,10 @@ public struct TagListBuilder(TagList tags)
 
     public void ToggleTag(string tag)
     {
-        if (FindTag(this.Tags, tag, out var result))
+        if (this.Tags.FindTag(tag, out var result))
             RemoveTag(result);
         else
             AddTag(tag);
-    }
-
-    private static bool FindTag(TagList tags, string tag, out Tag result)
-    {
-        ReadOnlySpan<char> span = tag;
-
-        foreach (var t in tags)
-        {
-            if (span.Equals(t, StringComparison.Ordinal))
-            {
-                result = t;
-                return true;
-            }
-        }
-
-        result = default;
-        return false;
     }
 
     private void AddTag(string tag, string? token = null)

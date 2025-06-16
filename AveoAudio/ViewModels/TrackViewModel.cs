@@ -52,11 +52,12 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
 
         this.Tracklist.EditingTagsFor = this;
 
-        var tags = this.Tracklist.TagGroups.SelectMany(g => g);
+        var items = this.Tracklist.TagGroups.SelectMany(g => g);
 
-        foreach (var tag in tags)
+        foreach (var item in items)
         {
-            tag.IsChecked = this.tagsBuilder.HasTag(tag);
+            // TODO: Optimize?
+            item.IsChecked = this.tagsBuilder.Tags.FindTag(item.Tag, out _);
         }
     }
 

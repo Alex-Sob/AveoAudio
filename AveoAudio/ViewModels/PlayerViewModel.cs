@@ -61,20 +61,7 @@ public class PlayerViewModel : NotificationBase
 
     public bool HasDateLastPlayed => this.currentTrack?.LastPlayedOn.HasValue ?? false;
 
-    // TODO: Use enum
-    public bool HasTag(string tag)
-    {
-        if (!this.HasCurrentTrack) return false;
-
-        ReadOnlySpan<char> span = tag;
-
-        foreach (var t in this.currentTrack.Tags)
-        {
-            if (span.Equals(t, StringComparison.Ordinal)) return true;
-        }
-
-        return false;
-    }
+    public bool HasTag(string tag) => HasCurrentTrack && this.currentTrack.CommonTags.HasTag(tag);
 
     public bool IsPlaying => this.mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
 

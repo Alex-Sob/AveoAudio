@@ -1,8 +1,7 @@
 ﻿namespace AveoAudio;
 
-public class PlaylistBuilder(IEnumerable<Track> source, AppSettings settings)
+public class PlaylistBuilder(IEnumerable<Track> source)
 {
-    private readonly AppSettings settings = settings;
     private IEnumerable<Track> query = source;
 
     public IEnumerable<Track> Build() => this.query;
@@ -17,8 +16,9 @@ public class PlaylistBuilder(IEnumerable<Track> source, AppSettings settings)
     {
         if (tags.Count == 0) return this;
 
-        var mask = CreateMask(tags);
-        this.query = this.query.Where(track => (mask & track.CustomTags.Data) == 0);
+        var mask = CommonTags.CreateMask(tags);
+        this.query = this.query.Where(track => !track.CommonTags.HasAny(mask));
+
         return this;
     }
 
@@ -26,8 +26,9 @@ public class PlaylistBuilder(IEnumerable<Track> source, AppSettings settings)
     {
         if (tags.Count == 0) return this;
 
-        var mask = CreateMask(tags);
-        this.query = this.query.Where(track => (mask & track.CustomTags.Data) == mask);
+        var mask = CommonTags.CreateMask(tags);
+        this.query = this.query.Where(track => track.CommonTags.HasAll(mask));
+
         return this;
     }
 
@@ -64,18 +65,5 @@ public class PlaylistBuilder(IEnumerable<Track> source, AppSettings settings)
     {
         this.query = this.query.Where(track => track.Weather == Weather.None || track.Weather == weather);
         return this;
-    }
-
-    private int CreateMask(ICollection<string> tags)
-    {
-        int bitMask = 1, result = 0;
-
-        for (int i = 0; i < this.settings.Tags.Count; i++)
-        {
-            result |= tags.Contains(this.settings.Tags[i]) ? bitMask : 0;
-            bitMask <<= 1;
-        }
-
-        return result;
     }
 }

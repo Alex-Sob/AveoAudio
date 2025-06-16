@@ -196,7 +196,7 @@ public class MainViewModel : NotificationBase
         await MusicLibrary.Current.LoadByGenresAsync(this.Filter.SelectedGenres);
         var tracks = MusicLibrary.Current.GetByGenres(this.Filter.SelectedGenres);
 
-        var builder = new PlaylistBuilder(tracks, this.appSettings)
+        var builder = new PlaylistBuilder(tracks)
             .WithTimeOfDay(this.Selectors.TimeOfDay)
             .WithWeather(this.Selectors.Weather)
             .ExcludeTags(this.Filter.ExcludeTags)

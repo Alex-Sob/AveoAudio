@@ -14,6 +14,23 @@ public readonly struct TagList(ReadOnlyMemory<char> tags)
 
     public ReadOnlySpan<char> AsSpan() => this.tags.Span;
 
+    public bool FindTag(string tag, out Tag result)
+    {
+        ReadOnlySpan<char> span = tag;
+
+        foreach (var t in this)
+        {
+            if (span.Equals(t, StringComparison.Ordinal))
+            {
+                result = t;
+                return true;
+            }
+        }
+
+        result = default;
+        return false;
+    }
+
     public Enumerator GetEnumerator() => new(this.tags);
 
     public override string ToString() => this.tags.ToString();
