@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace AveoAudio.Core;
+namespace AveoAudio;
 
 public static class Logger
 {

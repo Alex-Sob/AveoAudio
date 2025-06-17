@@ -85,7 +85,7 @@ public class TracklistViewModel : NotificationBase
         }
 
         groups.Add(new("Time of day", Enum.GetNames<TimesOfDay>().AsSpan(1)));
-        groups.Add(new("Weather", Enum.GetNames<Weather>().AsSpan(1)));
+        groups.Add(new("Weather", [nameof(Weather.Sun), nameof(Weather.Cloudy)]));
         groups.Add(new("Others"));
 
         return [.. groups];

@@ -104,6 +104,7 @@ public class FilterViewModel : NotificationBase
 
         ApplyDefaults(this.selectors.TimeOfDay);
         ApplyDefaults(this.selectors.Weather);
+        ExcludeSeasons();
 
         this.OnPropertyChanged(nameof(this.HasGenre));
 
@@ -118,5 +119,15 @@ public class FilterViewModel : NotificationBase
         this.SelectedGenres.AddRange(defaults?.Genres ?? []);
         this.FilterTags.AddRange(defaults?.Tags ?? []);
         this.ExcludeTags.AddRange(defaults?.ExcludeTags ?? []);
+    }
+
+    private void ExcludeSeasons()
+    {
+        Span<Season> seasons = [Season.Autumn, Season.Spring, Season.Summer, Season.Winter];
+
+        foreach (var season in seasons)
+        {
+            if (season != Season.Current) this.ExcludeTags.Add(season);
+        }
     }
 }

@@ -1,6 +1,4 @@
-﻿using AveoAudio.Core;
-
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 
 using Windows.Storage;

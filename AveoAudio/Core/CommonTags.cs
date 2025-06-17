@@ -16,7 +16,8 @@ public struct CommonTags
 
         foreach (var tag in tags)
         {
-            mask.tags[1 << tagToIndexMap[tag]] = true;
+            if (tagToIndexMap.TryGetValue(tag, out var index))
+                mask.tags[1 << index] = true;
         }
 
         return mask;

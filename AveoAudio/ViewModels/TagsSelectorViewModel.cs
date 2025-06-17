@@ -10,7 +10,10 @@ public class TagsSelectorViewModel(ICollection<TagGroup> tagGroups, ICommand tog
 
     public void SelectTags(ICollection<string> tags)
     {
-        foreach (var item in this.TagGroups.SelectMany(g => g))
+        foreach (var group in this.TagGroups)
+        foreach (var item in group)
+        {
             item.IsChecked = tags.Contains(item);
+        }
     }
 }

@@ -92,8 +92,6 @@ public class MainViewModel : NotificationBase
 
     public SelectorsViewModel Selectors { get; }
 
-    private static Season Season => (Season)(DateTime.Today.Month / 3 % 4);
-
     private int CurrentTrackIndex => (int?)this.playbackList?.CurrentItemIndex ?? -1;
 
     public void RebuildPlaylist()
@@ -157,7 +155,7 @@ public class MainViewModel : NotificationBase
         var timeOfDay = this.Selectors.SelectedTimeOfDay;
         var weather = this.Selectors.SelectedWeather;
 
-        var imagePath = await this.imageManager.GetNextImage(Season.ToString(), timeOfDay, weather);
+        var imagePath = await this.imageManager.GetNextImage(Season.Current, timeOfDay, weather);
         this.Image = imagePath != null ? new BitmapImage(new Uri(imagePath)) : null;
     }
 
@@ -263,7 +261,7 @@ public class MainViewModel : NotificationBase
         this.listened = false;
         var newIndex = this.CurrentTrackIndex;
 
-        if (newIndex < 0 || newIndex >= this.queue.Capacity) return;
+        if (newIndex < 0 || newIndex >= this.queue.Capacity || newIndex == this.queue.CurrentIndex) return;
 
         App.Current.Dispatch(() =>
         {

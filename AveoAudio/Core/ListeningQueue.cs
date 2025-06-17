@@ -54,6 +54,8 @@ public class ListeningQueue(int capacity) : INotifyCollectionChanged
 
     public void MoveBack()
     {
+        if (this.CurrentIndex <= 0) return;
+
         this.CurrentIndex--;
         this.CurrentChanged?.Invoke(this, EventArgs.Empty);
         this.Shrink();
