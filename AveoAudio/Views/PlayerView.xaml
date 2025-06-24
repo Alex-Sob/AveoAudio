@@ -8,10 +8,32 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
+        <SolidColorBrush x:Key="GoToBluetoothDevicesButtonBackground" Opacity="0.5" Color="White" />
         <SolidColorBrush x:Key="TrackBoxBackground" Opacity="0.2" Color="Black" />
         <SolidColorBrush x:Key="TrackInfoBackground" Opacity="0.2" Color="Black" />
 
         <views:DateConverter x:Key="DateConverter" />
+
+        <Style x:Key="BluetoothIcon" TargetType="ContentControl">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContentControl">
+                        <Grid>
+                            <Ellipse Fill="DodgerBlue" />
+                            <TextBlock Text="&#xe702;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="White" Margin="7" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GoToBluetoothDevicesButtonStyle" TargetType="Button" BasedOn="{StaticResource Button}">
+            <Setter Property="Background" Value="{StaticResource GoToBluetoothDevicesButtonBackground}" />
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+            <Setter Property="FontSize" Value="30" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Padding" Value="30" />
+        </Style>
 
         <Style x:Key="TrackBox" TargetType="ContentControl">
             <Setter Property="FontSize" Value="16" />
@@ -51,6 +73,21 @@
           ManipulationMode="TranslateX,TranslateY"
           ManipulationCompleted="OnImageManipulationCompleted"
           Tapped="{x:Bind ViewModel.TogglePlayback}">
+
+        <ContentControl Margin="10" HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Style="{StaticResource BluetoothIcon}"
+                        Visibility="{x:Bind ViewModel.IsConnectedToDevice, Mode=OneWay}" />
+
+        <Button HorizontalAlignment="Center"
+                Style="{StaticResource GoToBluetoothDevicesButtonStyle}"
+                Visibility="{x:Bind ViewModel.IsNotConnectedToDevice, Mode=OneWay}"
+                Click="{x:Bind ViewModel.OpenBluetoothSettings}"
+                Tapped="OnPlayerElementTapped">
+            <Grid>
+                <Ellipse Fill="DodgerBlue" />
+                <TextBlock Text="&#xe702;" Margin="10" />
+            </Grid>
+        </Button>
 
         <ContentControl
             Margin="20" HorizontalAlignment="Left" VerticalAlignment="Bottom"

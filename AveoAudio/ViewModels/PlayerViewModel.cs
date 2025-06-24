@@ -18,6 +18,10 @@ public class PlayerViewModel : NotificationBase
 
         queue.CurrentChanged += OnCurrentTrackChanged;
         this.mediaPlayer.PlaybackSession.PlaybackStateChanged += this.OnPlaybackStateChanged;
+
+        BluetoothManager.DeviceConnected += this.OnConnectedDevicesChanged;
+        BluetoothManager.DeviceDisconnected += this.OnConnectedDevicesChanged;
+        BluetoothManager.WatchConnectedDevices();
     }
 
     public Track? CurrentTrack
@@ -63,9 +67,15 @@ public class PlayerViewModel : NotificationBase
 
     public bool HasTag(string tag) => HasCurrentTrack && this.currentTrack.CommonTags.HasTag(tag);
 
+    public bool IsConnectedToDevice { get; set; }
+
+    public bool IsNotConnectedToDevice => !this.IsConnectedToDevice;
+
     public bool IsPlaying => this.mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
 
     public bool IsPaused => !this.IsPlaying;
+
+    public void OpenBluetoothSettings() => _ = BluetoothManager.OpenSettingsAsync();
 
     public void RefreshImage() => _ = App.Current.MainViewModel.UpdateImageAsync();
 
@@ -80,6 +90,17 @@ public class PlayerViewModel : NotificationBase
     }
 
     public void ViewTrackInQueue() => App.Current.MainViewModel.ViewTrackInQueue();
+
+    private void OnConnectedDevicesChanged(object? sender, EventArgs args)
+    {
+        this.IsConnectedToDevice = BluetoothManager.HasConnectedDevices;
+
+        App.Current.Dispatch(() =>
+        {
+            OnPropertyChanged(nameof(this.IsConnectedToDevice));
+            OnPropertyChanged(nameof(this.IsNotConnectedToDevice));
+        });
+    }
 
     private void OnCurrentTrackChanged(object? sender, EventArgs e) => this.CurrentTrack = this.queue.Current;
 
