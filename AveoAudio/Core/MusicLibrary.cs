@@ -69,8 +69,9 @@ public class MusicLibrary
 
         var tasks = from folder in folders
                     from path in Directory.EnumerateFiles(folder.Path)
-                    where alternate.Contains(Track.GetName(path))
-                    select LoadFromPath(path, folder.Name);
+                    let name = Track.GetName(path.AsMemory())
+                    where alternate.Contains(name.Span)
+                    select LoadFromPath(path, folder.Name, name);
 
         await Task.WhenAll(tasks).ConfigureAwait(false);
     }
@@ -81,7 +82,7 @@ public class MusicLibrary
         var query = root.CreateFileQueryWithOptions(new QueryOptions(CommonFileQuery.OrderByDate, [Track.Extension]));
 
         var files = await query.GetFilesAsync(0, (uint)maxCount);
-        var tasks = files.Select(file => LoadFromFile(file));
+        var tasks = files.Select(file => LoadFromFile(file.Path, file));
 
         return await Task.WhenAll(tasks).ConfigureAwait(false);
     }
@@ -110,23 +111,22 @@ public class MusicLibrary
         return alternate.TryGetValue(genre, out var result) ? result : genre.ToString();
     }
 
-    private async Task<Track> LoadFromPath(string path, string? genre = null)
+    private Task<Track> LoadFromPath(string path, string? genre = null, ReadOnlyMemory<char>? name = null)
     {
-        await Task.Delay(1000);
-        var file = await StorageFile.GetFileFromPathAsync(path);
-        return await LoadFromFile(file, genre);
+        return LoadFromFile(path, file: null, genre, name);
     }
 
-    private async Task<Track> LoadFromFile(StorageFile file, string? genre = null)
+    private async Task<Track> LoadFromFile(string path, StorageFile? file = null, string? genre = null, ReadOnlyMemory<char>? name = null)
     {
-        var name = Track.GetName(file.Name.AsMemory());
+        name ??= Track.GetName(path.AsMemory());
         var alternate = this.tracksByName.GetAlternateLookup<ReadOnlySpan<char>>();
 
-        if (alternate.TryGetValue(name.Span, out var track)) return track;
+        if (alternate.TryGetValue(name.Value.Span, out var track)) return track;
 
-        genre ??= GetGenre(file.Path);
+        genre ??= GetGenre(path);
+        file ??= await StorageFile.GetFileFromPathAsync(path);
         track = await Track.Load(file, genre).ConfigureAwait(false);
-        alternate[name.Span] = track;
+        alternate[name.Value.Span] = track;
 
         return track;
     }
@@ -140,7 +140,7 @@ public class MusicLibrary
 
         await Task.WhenAll(files.Select(async (file, index) =>
         {
-            var track = await LoadFromFile(file, genre).ConfigureAwait(false);
+            var track = await LoadFromFile(file.Path, file, genre).ConfigureAwait(false);
             tracks[index] = track;
         }));
 
@@ -149,6 +149,7 @@ public class MusicLibrary
 
     private async void OnFileCreated(object sender, FileSystemEventArgs e)
     {
+        await Task.Delay(1000);
         var track = await LoadFromPath(e.FullPath).ConfigureAwait(false);
         TrackAdded?.Invoke(null, new TrackEventArgs(track));
     }
