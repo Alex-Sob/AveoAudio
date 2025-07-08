@@ -7,6 +7,7 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
     private DateTime? datePlayed;
     private bool isCurrent;
     private bool isSelected;
+    private bool justPlayed;
 
     private TagListBuilder tagsBuilder = new(track.Tags);
 
@@ -30,6 +31,12 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
     {
         get => this.isSelected;
         set => this.SetProperty(ref this.isSelected, value);
+    }
+
+    public bool JustPlayed
+    {
+        get => this.justPlayed;
+        set => this.SetProperty(ref this.justPlayed, value);
     }
 
     public Track Track { get; } = track;

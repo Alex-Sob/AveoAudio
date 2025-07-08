@@ -12,10 +12,24 @@ namespace AveoAudio.Views;
 
 public sealed partial class TracklistView : UserControl
 {
+    public static readonly DependencyProperty TrackInfoTemplateProperty = DependencyProperty.Register(
+        "TrackInfoTemplate",
+        typeof(DataTemplate),
+        typeof(TracklistView),
+        new PropertyMetadata(null));
+
     public TracklistView()
     {
         this.InitializeComponent();
+
+        this.TrackInfoTemplate = (DataTemplate)this.Resources["DefaultTrackInfoTemplate"];
         this.DataContextChanged += this.OnDataContextChanged;
+    }
+
+    public DataTemplate TrackInfoTemplate
+    {
+        get { return (DataTemplate)GetValue(TrackInfoTemplateProperty); }
+        set { SetValue(TrackInfoTemplateProperty, (DataTemplate)value); }
     }
 
     public TracklistViewModel? ViewModel { get; set; }

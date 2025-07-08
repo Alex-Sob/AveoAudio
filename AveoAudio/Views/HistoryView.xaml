@@ -11,8 +11,20 @@
     VerticalContentAlignment="Stretch"
     x:Name="view">
 
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="TrackInfoTextBrush" Color="SlateGray" />
+    </UserControl.Resources>
+
     <Grid Background="{Binding Background, ElementName=view}">
-        <views:TracklistView DataContext="{x:Bind ViewModel}" Margin="20 50 10 20" />
+        <views:TracklistView DataContext="{x:Bind ViewModel}" Margin="20 50 10 20">
+            <views:TracklistView.TrackInfoTemplate>
+                <DataTemplate x:DataType="viewModels:TrackViewModel">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Bind DatePlayed, Converter={StaticResource DateConverter}}" Foreground="{StaticResource TrackInfoTextBrush}" />
+                    </StackPanel>
+                </DataTemplate>
+            </views:TracklistView.TrackInfoTemplate>
+        </views:TracklistView>
 
         <StackPanel Orientation="Horizontal" Margin="10 8" HorizontalAlignment="Right" VerticalAlignment="Top">
             <SplitButton Margin="10 0" Style="{StaticResource RefreshButtonStyle}" Click="{x:Bind ViewModel.LoadHistory}">

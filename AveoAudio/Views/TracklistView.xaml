@@ -7,17 +7,16 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="using:System"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    x:Name="view">
 
     <UserControl.Resources>
         <ResourceDictionary>
-            <SolidColorBrush x:Key="EnqueueButtonBackground" Color="CornflowerBlue" Opacity="0.5" />
             <SolidColorBrush x:Key="ScrollButtonBrush" Color="DarkGray" />
             <SolidColorBrush x:Key="ScrollButtonActiveBrush" Color="Gray" />
             <SolidColorBrush x:Key="TrackButtonActiveBrush" Color="White" />
             <SolidColorBrush x:Key="TrackInfoTextBrush" Color="SlateGray" />
 
-            <views:DateConverter x:Key="DateConverter" />
             <views:BoolToStringConverter x:Key="BoolToColumnSpanConverter" TrueValue="1" FalseValue="2" />
 
             <CollectionViewSource x:Key="TagGroups" Source="{Binding TagGroups}" IsSourceGrouped="True" />
@@ -27,6 +26,20 @@
                 <Setter Property="Foreground" Value="CornflowerBlue" />
                 <Setter Property="Padding" Value="1 0 0 0" />
                 <Setter Property="Text" Value="&#xE725;" />
+            </Style>
+
+            <Style x:Key="JustPlayedIcon" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+                <Setter Property="Foreground" Value="LightSeaGreen" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="Text" Value="&#xf5b0;" />
+            </Style>
+
+            <Style x:Key="PlusIcon" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="SteelBlue" />
+                <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Text" Value="&#xe710;" />
             </Style>
 
             <Style x:Key="TrackButton" TargetType="Button">
@@ -92,8 +105,7 @@
                 <Setter Property="Padding" Value="1 0 0 0" />
             </Style>
 
-            <Style x:Key="EnqueueButton" BasedOn="{StaticResource TrackButton}" TargetType="Button">
-                <Setter Property="Background" Value="{StaticResource EnqueueButtonBackground}" />
+            <Style x:Key="EnqueueButton" BasedOn="{StaticResource Button}" TargetType="Button">
                 <Setter Property="BorderBrush" Value="Transparent" />
                 <Setter Property="Content" Value="&#xe710;" />
                 <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
@@ -143,6 +155,13 @@
                 <Setter Property="VerticalContentAlignment" Value="Stretch" />
                 <Setter Property="Width" Value="20" />
             </Style>
+
+            <DataTemplate x:Key="DefaultTrackInfoTemplate" x:DataType="viewModels:TrackViewModel">
+                <StackPanel Orientation="Horizontal" Visibility="{x:Bind IsSelected, Mode=OneWay}">
+                    <TextBlock Margin="0 1 2 0" VerticalAlignment="Center" Style="{StaticResource PlusIcon}" />
+                    <TextBlock Text="{x:Bind Track.DateAdded, Converter={StaticResource DateConverter}}" Foreground="{StaticResource TrackInfoTextBrush}" />
+                </StackPanel>
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -169,16 +188,21 @@
                             Visibility="{Binding IsSelected}"
                             Click="{x:Bind Tracklist.Play}" />
 
-                        <!-- Use play icon edb5 -->
                         <views:WrapPanel Grid.Column="1" Margin="10 0" VerticalAlignment="Center">
                             <TextBlock TextWrapping="Wrap">
                                 <Run Text="{x:Bind Track.Name}" />
                                 <Run Text="   " />
-                                <Run Text="{x:Bind DatePlayed, Converter={StaticResource DateConverter}, Mode=OneWay}" FontStyle="Italic" Foreground="SteelBlue" />
+                                <Run Text="{x:Bind Track.Genre}" FontStyle="Italic" Foreground="SteelBlue" />
                             </TextBlock>
+
+                            <TextBlock
+                                Margin="15 1 0 0" VerticalAlignment="Center"
+                                Style="{StaticResource JustPlayedIcon}"
+                                Visibility="{x:Bind JustPlayed, Mode=OneWay}" />
+
                             <Button Margin="10 0"
                                     Style="{StaticResource WarningButton}"
-                                    Visibility="{x:Bind IsInvalid}"
+                                    Visibility="{x:Bind IsInvalid, Mode=OneWay}"
                                     ToolTipService.ToolTip="Invalid Subtitle"
                                     Click="{x:Bind OpenFolder}" />
                         </views:WrapPanel>
@@ -198,11 +222,9 @@
                             Visibility="{Binding HasChanges}"
                             Click="{x:Bind UpdateTags}" />
 
-                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="10 0" Orientation="Horizontal" Visibility="{Binding IsSelected}">
-                            <TextBlock Text="{x:Bind Track.Genre}" Foreground="{StaticResource TrackInfoTextBrush}" />
-                            <TextBlock Text="&#xe710;" Foreground="SteelBlue" FontFamily="Segoe Fluent Icons" FontSize="12" Margin="20 1 2 0" VerticalAlignment="Center" />
-                            <TextBlock Text="{x:Bind Track.DateAdded, Converter={StaticResource DateConverter}}" Foreground="{StaticResource TrackInfoTextBrush}" />
-                        </StackPanel>
+                        <ContentControl
+                            Grid.Row="1" Grid.Column="1" Margin="10 0"
+                            Content="{x:Bind}" ContentTemplate="{Binding TrackInfoTemplate, ElementName=view}" />
 
                         <Button
                             Grid.Column="4" HorizontalAlignment="Right"

@@ -15,6 +15,8 @@ public class QueueViewModel : TracklistViewModel
         this.queue.CurrentChanged += OnCurrentChanged;
     }
 
+    public TrackViewModel? Current => this.queue.Current != null ? this.Queue[this.queue.CurrentIndex] : null;
+
     public IList<TrackViewModel> Queue => this.Tracks;
 
     public void GoToCurrent() => this.SelectedTrack = this.Queue[this.currentIndex];

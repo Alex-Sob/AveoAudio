@@ -242,7 +242,7 @@ public class MainViewModel : NotificationBase
 
             App.Current.Dispatch(() =>
             {
-                this.Queue.MarkCurrentAsPlayed();
+                this.Queue.Current!.JustPlayed = true;
                 this.History.Add(this.queue.Current!);
             });
         }

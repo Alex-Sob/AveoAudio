@@ -6,7 +6,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
-    xmlns:local="using:AveoAudio"
+    xmlns:views="using:AveoAudio.Views"
     RequestedTheme="Light">
     
     <Application.Resources>
@@ -20,6 +20,8 @@
 
             <SolidColorBrush x:Key="ForegroundBrush" Color="#FF343434" />
             <SolidColorBrush x:Key="ButtonActiveBrush" Color="White" Opacity="0.7" />
+            
+            <views:DateConverter x:Key="DateConverter" />
 
             <Style x:Key="Pivot" TargetType="Pivot">
                 <Setter Property="Margin" Value="0"/>
