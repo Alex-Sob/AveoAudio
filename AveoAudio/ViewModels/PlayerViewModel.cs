@@ -32,31 +32,8 @@ public class PlayerViewModel : NotificationBase
             if (this.SetProperty(ref this.currentTrack, value))
             {
                 this.OnPropertyChanged(nameof(this.HasCurrentTrack));
-                this.OnPropertyChanged(nameof(this.DisplayTags));
                 this.OnPropertyChanged(nameof(this.HasDateLastPlayed));
-                this.OnPropertyChanged(nameof(this.HasTag));
             }
-        }
-    }
-
-    public string? DisplayTags
-    {
-        get
-        {
-            if (!this.HasCurrentTrack || this.currentTrack.Tags.IsEmpty) return null;
-
-            int current = 0;
-            Span<char> span = stackalloc char[this.currentTrack!.Tags.Length + 1];
-
-            foreach (ReadOnlySpan<char> tag in this.currentTrack.Tags)
-            {
-                if (Enum.TryParse<TimesOfDay>(tag, out _)) continue;
-                tag.CopyTo(span.Slice(current, tag.Length));
-                current += tag.Length;
-                span[current++] = ' ';
-            }
-
-            return span[..current].ToString();
         }
     }
 
@@ -64,8 +41,6 @@ public class PlayerViewModel : NotificationBase
     public bool HasCurrentTrack => this.currentTrack != null;
 
     public bool HasDateLastPlayed => this.currentTrack?.LastPlayedOn.HasValue ?? false;
-
-    public bool HasTag(string tag) => HasCurrentTrack && this.currentTrack.CommonTags.HasTag(tag);
 
     public bool IsConnectedToDevice { get; set; }
 

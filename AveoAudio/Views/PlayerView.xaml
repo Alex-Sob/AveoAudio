@@ -9,10 +9,9 @@
 
     <UserControl.Resources>
         <SolidColorBrush x:Key="GoToBluetoothDevicesButtonBackground" Opacity="0.5" Color="White" />
+        <SolidColorBrush x:Key="TagBackground" Opacity="0.2" Color="WhiteSmoke" />
         <SolidColorBrush x:Key="TrackBoxBackground" Opacity="0.2" Color="Black" />
         <SolidColorBrush x:Key="TrackInfoBackground" Opacity="0.2" Color="Black" />
-
-        <views:DateConverter x:Key="DateConverter" />
 
         <Style x:Key="BluetoothIcon" TargetType="ContentControl">
             <Setter Property="Template">
@@ -67,6 +66,48 @@
             <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
             <Setter Property="FontSize" Value="20" />
         </Style>
+
+        <Style x:Key="Tag" TargetType="StackPanel">
+            <Setter Property="Background" Value="{StaticResource TagBackground}" />
+            <Setter Property="CornerRadius" Value="15" />
+            <Setter Property="Margin" Value="5 0 0 0" />
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Padding" Value="10 3" />
+        </Style>
+
+        <DataTemplate x:Key="BestTimeOfDayTagTemplate" x:DataType="x:String">
+            <StackPanel Style="{StaticResource Tag}">
+                <TextBlock Text="{x:Bind}" Margin="0 0 5 0" Style="{StaticResource TrackInfoText}" />
+                <TextBlock Text="&#xe735;" Foreground="Orange" Style="{StaticResource TagIcon}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="DefaultTagTemplate" x:DataType="x:String">
+            <StackPanel Style="{StaticResource Tag}">
+                <TextBlock Text="{x:Bind}" Style="{StaticResource TrackInfoText}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TagTemplate_private" x:DataType="x:String">
+            <StackPanel Style="{StaticResource Tag}">
+                <TextBlock Margin="0 0 5 0" Style="{StaticResource TrackInfoText}">private</TextBlock>
+                <TextBlock Text="&#xec19;" Foreground="PaleVioletRed" Style="{StaticResource TagIcon}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TagTemplate_public" x:DataType="x:String">
+            <StackPanel Style="{StaticResource Tag}">
+                <TextBlock Margin="0 0 5 0" Style="{StaticResource TrackInfoText}">public</TextBlock>
+                <TextBlock Text="&#xe716;" Foreground="DodgerBlue" Style="{StaticResource TagIcon}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TagTemplate_Sun" x:DataType="x:String">
+            <StackPanel Style="{StaticResource Tag}">
+                <TextBlock Margin="0 0 5 0" Style="{StaticResource TrackInfoText}">Sun</TextBlock>
+                <TextBlock Text="&#xf08c;" Foreground="Yellow" Style="{StaticResource TagIcon}" />
+            </StackPanel>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="Transparent"
@@ -106,19 +147,13 @@
                 <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Style="{StaticResource TrackInfoContainer}" Visibility="{x:Bind ViewModel.IsPaused, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xe8ec;" Foreground="Violet" Margin="0 2 0 0" Style="{StaticResource TrackInfoIcon}" />
-                        <TextBlock Text="{x:Bind ViewModel.DisplayTags, Mode=OneWay, TargetNullValue='[none]'}" Margin="5 0 0 0" Style="{StaticResource TrackInfoText}" />
+                        <StackPanel x:Name="tags" Orientation="Horizontal" />
 
                         <TextBlock Text="&#xe710;" Foreground="DeepSkyBlue" Margin="20 2 4 0" Style="{StaticResource TrackInfoIcon}" />
-                        <TextBlock Text="{x:Bind ViewModel.CurrentTrack.DateAdded, Converter={StaticResource DateConverter}, Mode=OneWay}" Style="{StaticResource TrackInfoText}" />
+                        <TextBlock Text="{x:Bind ViewModel.CurrentTrack.DateAdded, Converter={StaticResource DateConverter}, Mode=OneWay}" Style="{StaticResource TrackInfoText}" VerticalAlignment="Center" />
 
-                        <TextBlock Text="&#xedb5;" Foreground="Turquoise" Margin="20 1 5 0" Style="{StaticResource TrackInfoIcon}" Visibility="{x:Bind ViewModel.HasDateLastPlayed, Mode=OneWay}" />
-                        <TextBlock Text="{x:Bind ViewModel.CurrentTrack.LastPlayedOn, Converter={StaticResource DateConverter}, Mode=OneWay}" Style="{StaticResource TrackInfoText}" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="20 0 0 0">
-                        <TextBlock Text="&#xe706;" Foreground="Yellow" Style="{StaticResource TagIcon}" views:VisibilityHelper.IsVisible="{x:Bind ViewModel.HasTag('Sun'), Mode=OneWay}" />
-                        <TextBlock Text="&#xe716;" Foreground="DodgerBlue" Margin="5 0 0 0" Style="{StaticResource TagIcon}" views:VisibilityHelper.IsVisible="{x:Bind ViewModel.HasTag('public'), Mode=OneWay}" />
-                        <TextBlock Text="&#xee7e;" Foreground="PaleVioletRed" Margin="5 0 0 0" Style="{StaticResource TagIcon}" views:VisibilityHelper.IsVisible="{x:Bind ViewModel.HasTag('private'), Mode=OneWay}" />
+                        <TextBlock Text="&#xf5b0;" Foreground="Turquoise" Margin="20 1 5 0" Style="{StaticResource TrackInfoIcon}" Visibility="{x:Bind ViewModel.HasDateLastPlayed, Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind ViewModel.CurrentTrack.LastPlayedOn, Converter={StaticResource DateConverter}, Mode=OneWay}" Style="{StaticResource TrackInfoText}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Grid>
             </Grid>
@@ -126,7 +161,7 @@
 
         <Button
             Margin="5" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-            Style="{StaticResource Button}" FontSize="16"
+            Style="{StaticResource Button}" FontSize="18"
             Click="{x:Bind ViewModel.RefreshImage}" Tapped="OnPlayerElementTapped">&#xe72c;</Button>
     </Grid>
 </UserControl>

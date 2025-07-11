@@ -7,7 +7,7 @@ public readonly ref struct Tag(ReadOnlySpan<char> rawTag, int start)
 
     public int End => this.Start + this.rawTag.Length - 1;
 
-    public ReadOnlySpan<char> AsSpan() => this.rawTag;
+    public ReadOnlySpan<char> AsSpan() => this.tag;
 
     public bool HasToken => this.rawTag.EndsWith('!');
 

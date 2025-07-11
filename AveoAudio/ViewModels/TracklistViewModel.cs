@@ -1,7 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 
-using Windows.System;
-
 namespace AveoAudio.ViewModels;
 
 public class TracklistViewModel : NotificationBase
@@ -16,14 +14,11 @@ public class TracklistViewModel : NotificationBase
         this.queue = queue;
 
         this.TagsSelector = CreateTagsSelector();
-        this.CommonTags.AddRange(TagGroups.SelectMany(g => g).Select(t => t.Tag));
 
         Track.TagsUpdated += OnTagsUpdated;
     }
 
     public ObservableCollection<TagGroup> TagGroups => tagGroups ??= CreateTagGroups();
-
-    public HashSet<string> CommonTags { get; } = new(32);
 
     public TrackViewModel? EditingTagsFor { get; set; }
 
@@ -53,8 +48,6 @@ public class TracklistViewModel : NotificationBase
         this.Tracks.Clear();
         this.Tracks.AddRange(tracks);
     }
-
-    public void MarkCurrentAsPlayed() => this.Tracks[this.queue.CurrentIndex].DatePlayed = DateTime.Today;
 
     public void Play()
     {
@@ -102,6 +95,7 @@ public class TracklistViewModel : NotificationBase
         foreach (var trackViewModel in this.Tracks)
         {
             if (trackViewModel.Track == e.Track) trackViewModel.Tags = e.Track.Tags.ToString();
+            // TODO: Notify IsInvalid/DateAdded changed
         }
     }
 }

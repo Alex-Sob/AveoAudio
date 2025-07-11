@@ -14,7 +14,7 @@
         <SolidColorBrush x:Key="CommandBarButtonBackgroundPointerOver" Color="Gray" Opacity="0.2" />
         <SolidColorBrush x:Key="CommandBarButtonBackgroundPressed" Color="Gray" Opacity="0.4" />
         <SolidColorBrush x:Key="CommandBarButtonBorderPressed" Color="Gray" Opacity="0.9" />
-        <SolidColorBrush x:Key="PaneBackground" Opacity="0.8" Color="WhiteSmoke" />
+        <SolidColorBrush x:Key="PaneBackground" Opacity="0.6" Color="WhiteSmoke" />
         <SolidColorBrush x:Key="OverlayBackground" Opacity="0.8" Color="White" />
         <SolidColorBrush x:Key="PivotHeaderBackground" Color="LightGray" Opacity="0.5" />
         <SolidColorBrush x:Key="MediaPlayerBackground" Color="WhiteSmoke" Opacity="0.3" />

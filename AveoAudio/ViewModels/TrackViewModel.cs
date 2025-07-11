@@ -78,9 +78,9 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
 
     public void ToggleBestTimeOfDay(string tag)
     {
-        if (!Enum.TryParse<TimesOfDay>(tag, out var timesOfDay)) return;
+        if (!tag.IsTimeOfDay(out var timeOfDay)) return;
 
-        this.tagsBuilder.ToggleBestTimeOfDay(timesOfDay);
+        this.tagsBuilder.ToggleBestTimeOfDay(timeOfDay);
 
         OnPropertyChanged(nameof(this.Tags));
         OnPropertyChanged(nameof(this.HasChanges));
@@ -99,11 +99,9 @@ public class TrackViewModel(TracklistViewModel tracklist, Track track) : Notific
         var others = this.Tracklist.TagGroups[^1];
         others.Tags.Clear();
 
-        var alternate = this.Tracklist.CommonTags.GetAlternateLookup<ReadOnlySpan<char>>();
-
         foreach (var tag in this.tagsBuilder.Tags)
         {
-            if (!alternate.Contains(tag)) others.Tags.Add(new(tag.ToString()));
+            if (!CommonTags.TryGetTag(tag, out _)) others.Tags.Add(new(tag.ToString()));
         }
 
         this.Tracklist.TagGroups[^1] = others;

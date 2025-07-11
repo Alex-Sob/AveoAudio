@@ -29,6 +29,8 @@ public class Track
         CommonTags.AddTag(nameof(Weather.Cloudy));
     }
 
+    public TimesOfDay BestTimesOfDay { get; private set; }
+
     public CommonTags CommonTags { get; private set; }
 
     public DateTime? DateAdded { get; private set; }
@@ -68,10 +70,11 @@ public class Track
         var props = await file.Properties.GetMusicPropertiesAsync().AsTask().ConfigureAwait(false);
 
         var (dateAdded, tags) = ParseProperties(props);
-        var (tagList, commonTags, timesOfDay, weather) = ParseTags(tags);
+        var (tagList, commonTags, timesOfDay, bestTimesOfDay, weather) = ParseTags(tags);
 
         return new Track
         {
+            BestTimesOfDay = bestTimesOfDay,
             CommonTags = commonTags,
             DateAdded = dateAdded,
             Genre = genre,
@@ -83,6 +86,8 @@ public class Track
         };
     }
 
+    public bool IsBestTimeOfDay(TimesOfDay timeOfDay) => this.BestTimesOfDay.HasFlag(timeOfDay);
+
     public override string ToString() => this.Name;
 
     public async Task UpdateTags(string tags)
@@ -92,8 +97,9 @@ public class Track
 
         await this.Properties.SavePropertiesAsync();
 
-        var (tagList, commonTags, timesOfDay, weather) = ParseTags(tags.AsMemory());
+        var (tagList, commonTags, timesOfDay, bestTimesOfDay, weather) = ParseTags(tags.AsMemory());
 
+        this.BestTimesOfDay = bestTimesOfDay;
         this.CommonTags = commonTags;
         this.Tags = tagList;
         this.TimesOfDay = timesOfDay;
@@ -114,27 +120,29 @@ public class Track
         return (hasDate ? dateAdded : null, rawTags);
     }
 
-    private static (TagList, CommonTags, TimesOfDay, Weather) ParseTags(ReadOnlyMemory<char> tags)
+    private static (TagList, CommonTags, TimesOfDay, TimesOfDay, Weather) ParseTags(ReadOnlyMemory<char> tags)
     {
         var tagList = new TagList(tags);
         var commonTags = new CommonTags();
         var timesOfDay = default(TimesOfDay);
+        var bestTimesOfDay = default(TimesOfDay);
         var weather = Weather.None;
 
         foreach (var tag in tagList)
         {
             commonTags.TrySet(tag);
 
-            if (Enum.TryParse<TimesOfDay>(tag, out var timeOfDay))
+            if (tag.IsTimeOfDay(out var timeOfDay))
             {
                 timesOfDay |= timeOfDay;
+                if (tag.HasToken) bestTimesOfDay |= timeOfDay;
             }
-            else if (tag.AsSpan().Equals(nameof(Weather.Sun), StringComparison.Ordinal)) weather = Weather.Sun;
+            else if (tag.Is(nameof(Weather.Sun))) weather = Weather.Sun;
         }
 
         if (weather == Weather.Sun && timesOfDay == TimesOfDay.None)
             timesOfDay = TimesOfDay.Daytime & ~TimesOfDay.Sunset;
 
-        return (tagList, commonTags, timesOfDay, weather);
+        return (tagList, commonTags, timesOfDay, bestTimesOfDay, weather);
     }
 }

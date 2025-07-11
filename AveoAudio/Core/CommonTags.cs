@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AveoAudio;
 
@@ -41,6 +42,12 @@ public struct CommonTags
     {
         var bit = 1 << tagToIndexMap[tag];
         this.tags[bit] = !this.tags[bit];
+    }
+
+    public static bool TryGetTag(ReadOnlySpan<char> tag, [MaybeNullWhen(false)] out string value)
+    {
+        var lookup = tagToIndexMap.GetAlternateLookup<ReadOnlySpan<char>>();
+        return lookup.TryGetValue(tag, out value, out _);
     }
 
     public bool TrySet(ReadOnlySpan<char> tag, bool value = true)
