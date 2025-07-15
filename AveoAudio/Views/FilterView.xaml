@@ -134,12 +134,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Grid x:Name="ToggleButtonGrid">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
+                        <Grid x:Name="ToggleButtonGrid" ColumnDefinitions="Auto, Auto">
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup x:Name="CommonStates">
                                     <VisualState x:Name="Normal">
@@ -348,9 +343,7 @@
                                     <AnimatedIcon.RenderTransform />
                                 </AnimatedIcon>
                             </Border>
-
                         </Grid>
-
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -363,7 +356,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Expander">
-                        <Grid MinWidth="{TemplateBinding MinWidth}" MaxWidth="{TemplateBinding MaxWidth}">
+                        <Grid MinWidth="{TemplateBinding MinWidth}" MaxWidth="{TemplateBinding MaxWidth}" RowDefinitions="Auto, *">
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup x:Name="ExpandStates">
                                     <VisualState x:Name="ExpandUp">
@@ -451,10 +444,6 @@
 
                             </VisualStateManager.VisualStateGroups>
 
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
                             <ToggleButton x:Name="ExpanderHeader" FontSize="18" Foreground="{TemplateBinding Foreground}" IsEnabled="{TemplateBinding IsEnabled}" Style="{StaticResource ExpanderHeaderDownStyle}" Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding HeaderTemplate}" IsChecked="{Binding Path=IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
                             <!-- The clip is a composition clip applied in code -->
                             <Border x:Name="ExpanderContentClip" Grid.Row="1">
@@ -470,14 +459,65 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="ToggleSplitButtonStyle" TargetType="ToggleSplitButton">
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="FocusVisualMargin" Value="-1" />
+            <Setter Property="IsTabStop" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleSplitButton">
+                        <StackPanel x:Name="RootGrid" Orientation="Horizontal">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+
+                                    <VisualState x:Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="RootGrid.Background" Value="Transparent" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="FlyoutOpen" />
+                                    <VisualState x:Name="TouchPressed" />
+                                    <VisualState x:Name="PrimaryPointerOver" />
+                                    <VisualState x:Name="PrimaryPressed" />
+                                    <VisualState x:Name="SecondaryPointerOver" />
+                                    <VisualState x:Name="SecondaryPressed" />
+
+                                    <VisualState x:Name="Checked" />
+                                    <VisualState x:Name="CheckedFlyoutOpen" />
+                                    <VisualState x:Name="CheckedTouchPressed" />
+                                    <VisualState x:Name="CheckedPrimaryPointerOver" />
+                                    <VisualState x:Name="CheckedPrimaryPressed" />
+                                    <VisualState x:Name="CheckedSecondaryPointerOver" />
+                                    <VisualState x:Name="CheckedSecondaryPressed" />
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="SecondaryButtonPlacementStates">
+                                    <VisualState x:Name="SecondaryButtonRight" />
+                                    <VisualState x:Name="SecondaryButtonSpan" />
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <ToggleSwitch x:Name="PrimaryButton" IsTabStop="False" IsOn="{x:Bind IsChecked, Mode=TwoWay}" MinWidth="0" OffContent="" OnContent="" />
+                            <TextBlock Text="{TemplateBinding Content}" Margin="5 0 5 2" VerticalAlignment="Center" />
+                            <Button x:Name="SecondaryButton" Foreground="{TemplateBinding Foreground}" IsTabStop="False" Background="Transparent" BorderThickness="0" Padding="0">
+                                <Button.Content>
+                                    <AnimatedIcon Height="16" Width="16">
+                                        <animatedvisuals:AnimatedChevronDownSmallVisualSource />
+                                        <AnimatedIcon.FallbackIconSource>
+                                            <FontIconSource FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="8" Glyph="&#xE96E;" IsTextScaleFactorEnabled="False" />
+                                        </AnimatedIcon.FallbackIconSource>
+                                    </AnimatedIcon>
+                                </Button.Content>
+                            </Button>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
-    <Grid x:Name="root" Background="{Binding Background, ElementName=view}" Padding="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-
+    <Grid x:Name="root" RowDefinitions="Auto, *" Background="{Binding Background, ElementName=view}" Padding="10">
         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
             <Button Padding="12" Style="{StaticResource Button}" Click="{x:Bind ViewModel.RebuildPlaylist}">
                 <Grid>
@@ -524,19 +564,15 @@
                 </Expander>
 
                 <Expander Header="More" Margin="0 10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
+                    <Grid ColumnDefinitions="Auto, Auto" RowDefinitions="Auto, Auto, Auto">
+                        <TextBlock VerticalAlignment="Center">Tracks last played</TextBlock>
 
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock VerticalAlignment="Center">Suggest if last played</TextBlock>
-                        <ToggleSplitButton Grid.Column="1" Margin="10 0" Content="{x:Bind suggestIfLastPlayedOptions.SelectedValue, Mode=OneWay}" IsChecked="{x:Bind ViewModel.FilterByDatePlayed}">
+                        <ToggleSplitButton
+                            Grid.Column="1" Margin="10 0"
+                            Content="{x:Bind suggestIfLastPlayedOptions.SelectedValue, Mode=OneWay}"
+                            IsChecked="{x:Bind ViewModel.FilterByDatePlayed, Mode=TwoWay}"
+                            Style="{StaticResource ToggleSplitButtonStyle}">
+                            
                             <ToggleSplitButton.Flyout>
                                 <Flyout>
                                     <ListView x:Name="suggestIfLastPlayedOptions" SelectedValue="{x:Bind ViewModel.SuggestIfLastPlayed, Mode=TwoWay}" SelectedValuePath="Tag">
@@ -548,8 +584,14 @@
                             </ToggleSplitButton.Flyout>
                         </ToggleSplitButton>
 
-                        <TextBlock Grid.Row="1" VerticalAlignment="Center">Suggest if added</TextBlock>
-                        <ToggleSplitButton Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Margin="10 20" Content="{x:Bind suggestIfAddedOptions.SelectedValue, Mode=OneWay}" IsChecked="{x:Bind ViewModel.FilterByDateAdded}">
+                        <TextBlock Grid.Row="1" VerticalAlignment="Center">Tracks added</TextBlock>
+
+                        <ToggleSplitButton
+                            Grid.Row="1" Grid.Column="1" Margin="10 0"
+                            Content="{x:Bind suggestIfAddedOptions.SelectedValue, Mode=OneWay}"
+                            IsChecked="{x:Bind ViewModel.FilterByDateAdded, Mode=TwoWay}"
+                            Style="{StaticResource ToggleSplitButtonStyle}">
+
                             <ToggleSplitButton.Flyout>
                                 <Flyout>
                                     <ListView x:Name="suggestIfAddedOptions" SelectedValue="{x:Bind ViewModel.SuggestIfAdded, Mode=TwoWay}" SelectedValuePath="Tag">
@@ -560,6 +602,13 @@
                                 </Flyout>
                             </ToggleSplitButton.Flyout>
                         </ToggleSplitButton>
+
+                        <TextBlock Grid.Row="2" VerticalAlignment="Center">Tracks for which it's best time</TextBlock>
+
+                        <ToggleSwitch
+                            Grid.Row="2" Grid.Column="1" Margin="10 0" MinWidth="0"
+                            IsOn="{x:Bind ViewModel.FilterByBestTimeOfDay, Mode=TwoWay}"
+                            OffContent="" OnContent="" />
                     </Grid>
                 </Expander>
             </StackPanel>

@@ -30,6 +30,8 @@ public class FilterViewModel : NotificationBase
 
     public TagsSelectorViewModel ExcludeTagsSelector { get; private set; }
 
+    public bool FilterByBestTimeOfDay { get; set; }
+
     public bool FilterByDateAdded { get; set; }
 
     public bool FilterByDatePlayed { get; set; }

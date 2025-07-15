@@ -195,7 +195,7 @@ public class MainViewModel : NotificationBase
         var tracks = MusicLibrary.Current.GetByGenres(this.Filter.SelectedGenres);
 
         var builder = new PlaylistBuilder(tracks)
-            .WithTimeOfDay(this.Selectors.TimeOfDay)
+            .WithTimeOfDay(this.Selectors.TimeOfDay, this.Filter.FilterByBestTimeOfDay)
             .WithWeather(this.Selectors.Weather)
             .ExcludeTags(this.Filter.ExcludeTags)
             .FilterByTags(this.Filter.FilterTags)

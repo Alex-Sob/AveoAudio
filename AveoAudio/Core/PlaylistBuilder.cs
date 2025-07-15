@@ -54,10 +54,15 @@ public class PlaylistBuilder(IEnumerable<Track> source)
         return this;
     }
 
-    public PlaylistBuilder WithTimeOfDay(TimesOfDay? timeOfDay)
+    public PlaylistBuilder WithTimeOfDay(TimesOfDay? timeOfDay, bool ifBestTimeOnly = false)
     {
         timeOfDay ??= TimesOfDay.None;
-        this.query = this.query.Where(track => track.TimesOfDay == TimesOfDay.None || track.TimesOfDay.HasFlag(timeOfDay));
+
+        if (ifBestTimeOnly)
+            this.query = this.query.Where(track => track.IsBestTimeOfDay(timeOfDay.Value));
+        else
+            this.query = this.query.Where(track => track.TimesOfDay.HasFlag(timeOfDay) || track.TimesOfDay == TimesOfDay.None);
+
         return this;
     }
 
