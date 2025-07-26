@@ -238,12 +238,16 @@ public class MainViewModel : NotificationBase
         if (!this.listened && session.Position.TotalSeconds > session.NaturalDuration.TotalSeconds * 0.9)
         {
             this.listened = true;
-            HistoryManager.Add(this.queue.Current!);
+            var track = this.queue.Current!;
+
+            if (HistoryManager.GetLastPlayedOn(track)?.Date == DateTime.Today) return;
+
+            HistoryManager.Add(track);
 
             App.Current.Dispatch(() =>
             {
                 this.Queue.Current!.JustPlayed = true;
-                this.History.Add(this.queue.Current!);
+                this.History.Add(track);
             });
         }
     }

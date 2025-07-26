@@ -10,6 +10,14 @@ public class HistoryViewModel(ListeningQueue queue) : TracklistViewModel(queue)
 
     public void LoadHistory() => App.Current.GetBusy(LoadHistoryAsync(), "Loading");
 
+    public void RemoveSelected()
+    {
+        if (this.SelectedTrack == null) return;
+
+        HistoryManager.Remove(this.SelectedTrack.Track, this.SelectedTrack.DatePlayed!.Value);
+        this.Tracks.Remove(this.SelectedTrack!);
+    }
+
     public void Sync() => App.Current.GetBusy(HistoryManager.Sync(), "Syncing");
 
     private async Task LoadHistoryAsync()

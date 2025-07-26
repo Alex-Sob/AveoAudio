@@ -53,7 +53,20 @@ public static class HistoryManager
                from date in dates
                where date >= startDate && date <= endDate
                orderby date descending
-               select (track, date.Date);
+               select (track, date.DateTime);
+    }
+
+    public static void Remove(Track track, DateTime date)
+    {
+        var dates = GetLocalDates(track);
+        var index = Array.IndexOf(dates, date);
+
+        DateTimeOffset[] newDates = [..dates.AsSpan(0, index), ..dates.AsSpan(index + 1)];
+
+        if (newDates.Length == 0)
+            Container.Values.Remove(track.Name);
+        else
+            Container.Values[track.Name] = newDates;
     }
 
     public static async Task Sync()

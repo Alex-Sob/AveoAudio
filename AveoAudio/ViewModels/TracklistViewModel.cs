@@ -22,6 +22,8 @@ public class TracklistViewModel : NotificationBase
 
     public TrackViewModel? EditingTagsFor { get; set; }
 
+    public bool HasSelectedTrack => this.selectedTrack != null;
+
     public TrackViewModel? SelectedTrack
     {
         get => this.selectedTrack;
@@ -30,6 +32,8 @@ public class TracklistViewModel : NotificationBase
             if (this.selectedTrack != null) this.selectedTrack.IsSelected = false;
             this.SetProperty(ref this.selectedTrack, value);
             if (this.selectedTrack != null) this.selectedTrack.IsSelected = true;
+
+            OnPropertyChanged(nameof(HasSelectedTrack));
         }
     }
 

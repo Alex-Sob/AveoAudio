@@ -41,7 +41,20 @@
                     </Flyout>
                 </SplitButton.Flyout>
             </SplitButton>
+
             <Button Style="{StaticResource Button}" Click="{x:Bind ViewModel.Sync}">&#xedab;</Button>
+
+            <Button Content="&#xe712;" Style="{StaticResource Button}">
+                <Button.Flyout>
+                    <MenuFlyout Placement="Bottom">
+                        <MenuFlyoutItem Text="Remove Selected" IsEnabled="{x:Bind ViewModel.HasSelectedTrack, Mode=OneWay}" Click="{x:Bind ViewModel.RemoveSelected}">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xe74d;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                    </MenuFlyout>
+                </Button.Flyout>
+            </Button>
         </StackPanel>
     </Grid>
 </UserControl>
