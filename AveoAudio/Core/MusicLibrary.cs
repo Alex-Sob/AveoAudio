@@ -82,7 +82,7 @@ public class MusicLibrary
         var query = root.CreateFileQueryWithOptions(new QueryOptions(CommonFileQuery.OrderByDate, [Track.Extension]));
 
         var files = await query.GetFilesAsync(0, (uint)maxCount);
-        var tasks = files.Select(file => LoadFromFile(file.Path, file));
+        var tasks = files.Select(file => LoadFromFile(file));
 
         return await Task.WhenAll(tasks).ConfigureAwait(false);
     }
@@ -111,12 +111,17 @@ public class MusicLibrary
         return alternate.TryGetValue(genre, out var result) ? result : genre.ToString();
     }
 
-    private Task<Track> LoadFromPath(string path, string? genre = null, ReadOnlyMemory<char>? name = null)
+    private Task<Track> LoadFromFile(StorageFile file, string? genre = null, ReadOnlyMemory<char>? name = null)
     {
-        return LoadFromFile(path, file: null, genre, name);
+        return Load(file.Path, file, genre, name);
     }
 
-    private async Task<Track> LoadFromFile(string path, StorageFile? file = null, string? genre = null, ReadOnlyMemory<char>? name = null)
+    private Task<Track> LoadFromPath(string path, string? genre = null, ReadOnlyMemory<char>? name = null)
+    {
+        return Load(path, file: null, genre, name);
+    }
+
+    private async Task<Track> Load(string path, StorageFile? file = null, string? genre = null, ReadOnlyMemory<char>? name = null)
     {
         name ??= Track.GetName(path.AsMemory());
         var alternate = this.tracksByName.GetAlternateLookup<ReadOnlySpan<char>>();
@@ -140,7 +145,7 @@ public class MusicLibrary
 
         await Task.WhenAll(files.Select(async (file, index) =>
         {
-            var track = await LoadFromFile(file.Path, file, genre).ConfigureAwait(false);
+            var track = await LoadFromFile(file, genre).ConfigureAwait(false);
             tracks[index] = track;
         }));
 
