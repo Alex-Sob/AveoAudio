@@ -8,6 +8,7 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
+        <SolidColorBrush x:Key="BluetoothIconBrush" Color="DodgerBlue" />
         <SolidColorBrush x:Key="GoToBluetoothDevicesButtonBackground" Opacity="0.5" Color="White" />
         <SolidColorBrush x:Key="TagBackground" Opacity="0.2" Color="WhiteSmoke" />
         <SolidColorBrush x:Key="TrackBoxBackground" Opacity="0.2" Color="Black" />
@@ -18,7 +19,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ContentControl">
                         <Grid>
-                            <Ellipse Fill="DodgerBlue" />
+                            <Ellipse Fill="{StaticResource BluetoothIconBrush}" />
                             <TextBlock Text="&#xe702;" FontFamily="Segoe Fluent Icons" FontSize="20" Foreground="White" Margin="7" />
                         </Grid>
                     </ControlTemplate>
@@ -108,6 +109,13 @@
                 <TextBlock Text="&#xf08c;" Foreground="Yellow" Style="{StaticResource TagIcon}" />
             </StackPanel>
         </DataTemplate>
+
+        <DataTemplate x:Key="TagTemplate_Winter" x:DataType="x:String">
+            <StackPanel Style="{StaticResource Tag}">
+                <TextBlock Margin="0 0 5 0" Style="{StaticResource TrackInfoText}">Winter</TextBlock>
+                <TextBlock Text="&#xedad;" Foreground="DeepSkyBlue" Style="{StaticResource TagIcon}" />
+            </StackPanel>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="Transparent"
@@ -125,7 +133,7 @@
                 Click="{x:Bind ViewModel.OpenBluetoothSettings}"
                 Tapped="OnPlayerElementTapped">
             <Grid>
-                <Ellipse Fill="DodgerBlue" />
+                <Ellipse Fill="{StaticResource BluetoothIconBrush}" />
                 <TextBlock Text="&#xe702;" Margin="10" />
             </Grid>
         </Button>

@@ -16,11 +16,14 @@
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
             <!-- Other app resources here -->
-            <x:Double x:Key="TileSize">60</x:Double>
+            <x:Double x:Key="SelectorWidth">50</x:Double>
+            <x:Double x:Key="SidebarWidth">60</x:Double>
 
             <SolidColorBrush x:Key="ForegroundBrush" Color="#FF343434" />
             <SolidColorBrush x:Key="ButtonActiveBrush" Color="White" Opacity="0.7" />
-            
+            <SolidColorBrush x:Key="TagButtonBackground" Color="White" Opacity="0.2" />
+            <SolidColorBrush x:Key="TagButtonBorderBrush" Color="CornflowerBlue" Opacity="0.6" />
+
             <views:DateConverter x:Key="DateConverter" />
 
             <Style x:Key="Pivot" TargetType="Pivot">
@@ -326,7 +329,8 @@
             </Style>
 
             <Style x:Key="ToggleTagButton" TargetType="ToggleButton">
-                <Setter Property="BorderBrush" Value="LightSkyBlue" />
+                <Setter Property="Background" Value="{StaticResource TagButtonBackground}" />
+                <Setter Property="BorderBrush" Value="{StaticResource TagButtonBorderBrush}" />
                 <Setter Property="BorderThickness" Value="1.5" />
                 <Setter Property="CornerRadius" Value="15" />
                 <Setter Property="Foreground" Value="DarkSlateGray" />

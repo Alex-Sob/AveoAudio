@@ -27,6 +27,7 @@ public sealed partial class PlayerView : UserControl
         "private" => "TagTemplate_private",
         nameof(Weather.Sun) => "TagTemplate_Sun",
         _ when tag.HasToken => "BestTimeOfDayTagTemplate",
+        "Winter" => "TagTemplate_Winter",
         _ => "DefaultTagTemplate"
     };
 

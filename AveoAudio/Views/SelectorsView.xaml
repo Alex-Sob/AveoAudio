@@ -8,49 +8,158 @@
     d:DesignWidth="400">
 
     <UserControl.Resources>
-        <Style x:Key="OptionText" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}" />
-            <Setter Property="Margin" Value="20 0" />
+        <SolidColorBrush x:Key="SelectorBackground" Color="WhiteSmoke" Opacity="0.5" />
+        <SolidColorBrush x:Key="SelectorCheckedBrush" Color="RoyalBlue" Opacity="1" />
+        <SolidColorBrush x:Key="SelectorHoverBrush" Color="WhiteSmoke" Opacity="0.8" />
+        <SolidColorBrush x:Key="SelectorGroupSeparatorBrush" Color="Silver" />
+        <SolidColorBrush x:Key="SelectorTextBrush" Color="White" />
+
+        <Style x:Key="SelectorText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource SelectorTextBrush}" />
+            <Setter Property="Margin" Value="10 0" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style TargetType="ListViewItem">
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0 0 0 2" />
+            <Setter Property="Margin" Value="0 0 0 5" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
         </Style>
 
-        <Style x:Key="TileStyle" TargetType="ToggleButton">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
-            <Setter Property="FontSize" Value="20" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Height" Value="{StaticResource TileSize}" />
-            <Setter Property="Width" Value="{StaticResource TileSize}" />
-            <Setter Property="VerticalAlignment" Value="Stretch" />
-        </Style>
+        <Style x:Key="SelectorStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="{StaticResource SelectorBackground}" />
+            <Setter Property="Margin" Value="5 0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Height" Value="{StaticResource SelectorWidth}" />
+            <Setter Property="Width" Value="{StaticResource SelectorWidth}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Grid>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
 
-        <Style x:Key="CustomizeButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="LightGray" />
-            <Setter Property="BorderThickness" Value="1 0 0 0" />
-            <Setter Property="Content" Value="&#xE713;" />
-            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
-            <Setter Property="FontSize" Value="20" />
-            <Setter Property="Width" Value="{StaticResource TileSize}" />
-            <Setter Property="VerticalAlignment" Value="Stretch" />
+                                    <VisualState x:Name="PointerOver">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource SelectorHoverBrush}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ToggleButtonBackgroundPressed}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="Disabled">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ToggleButtonBackgroundDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="Checked">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource SelectorCheckedBrush}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="CheckedPointerOver">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ToggleButtonBackgroundCheckedPointerOver}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="CheckedPressed">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ToggleButtonBackgroundCheckedPressed}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="CheckedDisabled">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ToggleButtonBackgroundCheckedDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="Indeterminate">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ToggleButtonBackgroundIndeterminate}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="IndeterminatePointerOver">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ToggleButtonBackgroundIndeterminatePointerOver}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="IndeterminatePressed">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ToggleButtonBackgroundIndeterminatePressed}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+
+                                    <VisualState x:Name="IndeterminateDisabled">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Ellipse" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ToggleButtonBackgroundIndeterminateDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            
+                            <Ellipse x:Name="Ellipse" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="0" />
+                            <ContentPresenter x:Name="ContentPresenter"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                ContentTransitions="{TemplateBinding ContentTransitions}"
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+
+                                <ContentPresenter.BackgroundTransition>
+                                    <BrushTransition Duration="0:0:0.083" />
+                                </ContentPresenter.BackgroundTransition>
+                            </ContentPresenter>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="Separator" TargetType="Border">
-            <Setter Property="BorderBrush" Value="LightGray" />
+            <Setter Property="BorderBrush" Value="{StaticResource SelectorGroupSeparatorBrush}" />
             <Setter Property="BorderThickness" Value="0 1 0 0" />
             <Setter Property="Margin" Value="10 0" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid Margin="0 10 0 0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="21" />
@@ -61,70 +170,70 @@
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=earlyMorn, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}" Padding="0">
+                        Style="{StaticResource SelectorStyle}">
                         <Image Source="/Assets/EarlyMorn.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Early Morning</TextBlock>
+                    <TextBlock Style="{StaticResource SelectorText}">Early Morning</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="lateMorn" Tag="LateMorn">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=lateMorn, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}" Padding="0">
+                        Style="{StaticResource SelectorStyle}">
                         <Image Source="ms-appx:///Assets/LateMorn.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Late Morning</TextBlock>
+                    <TextBlock Style="{StaticResource SelectorText}">Late Morning</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="afternoon" Tag="Afternoon">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=afternoon, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}" Padding="5">
+                        Style="{StaticResource SelectorStyle}">
                         <Image Source="ms-appx:///Assets/Afternoon.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Afternoon</TextBlock>
+                    <TextBlock Style="{StaticResource SelectorText}">Afternoon</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="earlyEvening" Tag="EarlyEvening">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=earlyEvening, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}" Padding="5">
+                        Style="{StaticResource SelectorStyle}">
                         <Image Source="ms-appx:///Assets/Evening.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Early Evening</TextBlock>
+                    <TextBlock Style="{StaticResource SelectorText}">Early Evening</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="sunset" Tag="Sunset">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=sunset, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}" Padding="5">
+                        Style="{StaticResource SelectorStyle}">
                         <Image Source="ms-appx:///Assets/Sunset.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Sunset</TextBlock>
+                    <TextBlock Style="{StaticResource SelectorText}">Sunset</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="twilight" Tag="Twilight">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=twilight, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}" Padding="5">
+                        Style="{StaticResource SelectorStyle}">
                         <Image Source="ms-appx:///Assets/Twilight.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Twilight</TextBlock>
+                    <TextBlock Style="{StaticResource SelectorText}">Twilight</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="night" Tag="Night">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=night, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}">
+                        Style="{StaticResource SelectorStyle}">
                         <Image Source="ms-appx:///Assets/Night.png" Width="32" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Night</TextBlock>
+                    <TextBlock Style="{StaticResource SelectorText}">Night</TextBlock>
                 </StackPanel>
             </ListViewItem>
         </ListView>
@@ -134,20 +243,20 @@
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=sun, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}">
+                        Style="{StaticResource SelectorStyle}">
                         <Image Source="ms-appx:///Assets/Sun.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Sun</TextBlock>
+                    <TextBlock Style="{StaticResource SelectorText}">Sun</TextBlock>
                 </StackPanel>
             </ListViewItem>
             <ListViewItem x:Name="cloudy" Tag="Cloudy">
                 <StackPanel Orientation="Horizontal">
                     <ToggleButton
                         IsChecked="{Binding IsSelected, ElementName=cloudy, Mode=TwoWay}"
-                        Style="{StaticResource TileStyle}">
+                        Style="{StaticResource SelectorStyle}">
                         <Image Source="ms-appx:///Assets/Cloud.png" />
                     </ToggleButton>
-                    <TextBlock Style="{StaticResource OptionText}">Cloudy</TextBlock>
+                    <TextBlock Style="{StaticResource SelectorText}">Cloudy</TextBlock>
                 </StackPanel>
             </ListViewItem>
         </ListView>
