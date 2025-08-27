@@ -16,6 +16,7 @@
         <SolidColorBrush x:Key="OverlayBackground" Opacity="0.8" Color="White" />
         <SolidColorBrush x:Key="PivotHeaderBackground" Color="DarkGray" Opacity="0.5" />
         <SolidColorBrush x:Key="PivotHeaderItemForegroundActive" Color="White" />
+        <SolidColorBrush x:Key="PivotHeaderItemForeground" Color="WhiteSmoke" />
         <SolidColorBrush x:Key="SidebarBackground" Color="DarkGray" Opacity="0.5" />
 
         <Style TargetType="SplitView">
@@ -34,7 +35,7 @@
         </Style>
 
         <Style TargetType="PivotHeaderItem">
-            <Setter Property="Foreground" Value="WhiteSmoke"/>
+            <Setter Property="Foreground" Value="{StaticResource PivotHeaderItemForeground}" />
             <Setter Property="Height" Value="{StaticResource SelectorWidth}"/>
             <Setter Property="Template">
                 <Setter.Value>
